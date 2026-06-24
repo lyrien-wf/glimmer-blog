@@ -6,6 +6,9 @@ blog-backend/.mvn/
 blog-backend/mvnw
 blog-backend/mvnw.cmd
 blog-backend/uploads/
+*.jar
+*.war
+*.class
 
 # === Frontend ===
 blog-frontend/node_modules/
@@ -16,13 +19,23 @@ blog-frontend/*.local
 # === IDE ===
 .vscode/
 .idea/
+*.iml
 *.swp
 *.swo
+*.ipr
+*.iws
 
 # === OS ===
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # === Secrets ===
 *.env
 .env.local
+.env.*.local
+
+# === Logs ===
+*.log
+logs/
