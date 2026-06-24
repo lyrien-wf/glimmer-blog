@@ -1,0 +1,28 @@
+# === Backend ===
+blog-backend/target/
+blog-backend/*.iml
+blog-backend/.idea/
+blog-backend/.mvn/
+blog-backend/mvnw
+blog-backend/mvnw.cmd
+blog-backend/uploads/
+
+# === Frontend ===
+blog-frontend/node_modules/
+blog-frontend/dist/
+blog-frontend/.DS_Store
+blog-frontend/*.local
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Secrets ===
+*.env
+.env.local

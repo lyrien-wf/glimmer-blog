@@ -1,0 +1,89 @@
+<template>
+  <div class="categories-page">
+    <NavBar />
+
+    <section class="container">
+      <h1 class="page-title">分类</h1>
+      <div class="category-grid" v-if="categories.length">
+        <router-link v-for="cat in categories" :key="cat.id"
+                     :to="`/?categoryId=${cat.id}`" class="category-card card">
+          <div class="category-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+          </div>
+          <h3 class="category-name">{{ cat.name }}</h3>
+        </router-link>
+      </div>
+      <div v-else class="empty-state">
+        <p>暂无分类</p>
+      </div>
+    </section>
+
+    <Footer />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getCategories } from '../api/index.js'
+import NavBar from '../components/NavBar.vue'
+import Footer from '../components/Footer.vue'
+
+const categories = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await getCategories()
+    categories.value = res.data
+  } catch (err) {
+    console.error('加载分类失败', err)
+  }
+})
+</script>
+
+<style scoped>
+.categories-page {
+  padding-top: 56px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 60px 0 32px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 80px;
+}
+
+.category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+}
+
+.category-icon {
+  color: var(--color-accent);
+}
+
+.category-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 0;
+  color: var(--color-text-sub);
+}
+</style>
