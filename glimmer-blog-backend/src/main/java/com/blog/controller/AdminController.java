@@ -120,6 +120,12 @@ public class AdminController {
         return ApiResponse.ok();
     }
 
+    @PutMapping("/categories/{id}")
+    public ApiResponse<Void> updateCategory(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        categoryService.updateCategory(id, body.get("name"));
+        return ApiResponse.ok();
+    }
+
     // ===== 标签管理 =====
 
     @PostMapping("/tags")

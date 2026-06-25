@@ -48,6 +48,18 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
+    public void updateCategory(Long id, String name) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("分类不存在"));
+        categoryRepository.findByName(name).ifPresent(existing -> {
+            if (!existing.getId().equals(id)) {
+                throw new RuntimeException("分类名已存在");
+            }
+        });
+        category.setName(name);
+        categoryRepository.save(category);
+    }
+
     private CategoryDTO toDTO(Category category) {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());

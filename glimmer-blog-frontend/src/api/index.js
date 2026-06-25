@@ -76,6 +76,9 @@ export const createCategory = (name) =>
 export const deleteCategory = (id) =>
   api.delete(`/api/admin/categories/${id}`)
 
+export const updateCategory = (id, name) =>
+  api.put(`/api/admin/categories/${id}`, { name })
+
 export const createTag = (name) =>
   api.post('/api/admin/tags', { name })
 

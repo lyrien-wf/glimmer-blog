@@ -5,7 +5,10 @@
     <div class="container" style="padding-top: 80px;">
       <div class="admin-header">
         <h1>文章管理</h1>
-        <router-link to="/admin/articles/edit" class="btn btn-primary">新建文章</router-link>
+        <div class="header-actions">
+          <router-link to="/admin/categories" class="btn btn-secondary">分类管理</router-link>
+          <router-link to="/admin/articles/edit" class="btn btn-primary">新建文章</router-link>
+        </div>
       </div>
 
       <table class="admin-table">
@@ -104,6 +107,11 @@ function formatDate(dateStr) {
 .admin-header h1 {
   font-size: 28px;
   font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .admin-table {
