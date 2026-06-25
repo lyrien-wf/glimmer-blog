@@ -5,7 +5,10 @@
     <!-- Hero -->
     <section class="hero">
       <div class="container">
-        <h1 class="hero-title">Glimmer Blog</h1>
+        <div class="hero-clock">
+          <span class="clock-time">{{ clockTime }}</span>
+          <span class="clock-date">{{ clockDate }}</span>
+        </div>
         <p class="hero-subtitle">记录技术与生活</p>
       </div>
     </section>
@@ -36,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getArticles, searchArticles } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
@@ -50,8 +53,28 @@ const page = ref(1)
 const totalPages = ref(1)
 const searchQuery = ref('')
 let searchTimer = null
+let clockTimer = null
+
+const clockTime = ref('')
+const clockDate = ref('')
+
+function updateClock() {
+  const now = new Date()
+  const h = String(now.getHours()).padStart(2, '0')
+  const m = String(now.getMinutes()).padStart(2, '0')
+  const s = String(now.getSeconds()).padStart(2, '0')
+  clockTime.value = `${h}:${m}:${s}`
+
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  const month = now.getMonth() + 1
+  const day = now.getDate()
+  const weekday = weekdays[now.getDay()]
+  clockDate.value = `${month}月${day}日 星期${weekday}`
+}
 
 onMounted(() => {
+  updateClock()
+  clockTimer = setInterval(updateClock, 1000)
   if (route.query.categoryId) {
     loadArticles(1, route.query.categoryId, route.query.tagId)
   } else if (route.query.tagId) {
@@ -59,6 +82,10 @@ onMounted(() => {
   } else {
     loadArticles(1)
   }
+})
+
+onUnmounted(() => {
+  clearInterval(clockTimer)
 })
 
 async function loadArticles(p, categoryId, tagId) {
@@ -117,11 +144,27 @@ async function doSearch(q, p) {
   text-align: center;
 }
 
-.hero-title {
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  margin-bottom: 8px;
+.hero-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.clock-time {
+  font-size: 64px;
+  font-weight: 200;
+  letter-spacing: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.clock-date {
+  font-size: 16px;
+  color: var(--color-text-sub);
+  letter-spacing: 2px;
 }
 
 .hero-subtitle {
@@ -180,7 +223,7 @@ async function doSearch(q, p) {
 
 @media (max-width: 768px) {
   .hero { padding: 60px 0 24px; }
-  .hero-title { font-size: 36px; }
+  .clock-time { font-size: 42px; }
   .article-grid { grid-template-columns: 1fr; }
 }
 </style>
