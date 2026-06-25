@@ -29,7 +29,23 @@
       <TocNav :content="article.htmlContent" />
     </div>
 
+    <!-- 骨架屏 -->
     <div v-else-if="!error" class="loading-state container">
+      <div class="skeleton-article">
+        <div class="skeleton-cover-lg"></div>
+        <div class="skeleton-body-lg">
+          <div class="skeleton-line-lg skeleton-title-lg"></div>
+          <div class="skeleton-meta-lg">
+            <div class="skeleton-line-lg skeleton-tag"></div>
+            <div class="skeleton-line-lg skeleton-date-lg"></div>
+            <div class="skeleton-line-lg skeleton-views-lg"></div>
+          </div>
+          <div class="skeleton-content">
+            <div class="skeleton-line-lg skeleton-para" v-for="n in 8" :key="n"
+                 :style="{ width: n % 3 === 0 ? '60%' : n % 2 === 0 ? '90%' : '100%' }"></div>
+          </div>
+        </div>
+      </div>
       <p>加载中...</p>
     </div>
     <div v-else class="error-state container">
@@ -176,5 +192,70 @@ function formatDate(dateStr) {
   color: rgba(255, 255, 255, 0.4);
   font-family: var(--font-mono);
   text-transform: uppercase;
+}
+
+/* 骨架屏样式 */
+.skeleton-article {
+  padding-top: 40px;
+  padding-bottom: 80px;
+}
+
+.skeleton-cover-lg {
+  width: 100%;
+  height: 420px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+  margin-bottom: 40px;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-body-lg {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.skeleton-line-lg {
+  height: 14px;
+  background: var(--color-bg-alt);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-title-lg {
+  width: 70%;
+  height: 36px;
+  margin-bottom: 24px;
+}
+
+.skeleton-meta-lg {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.skeleton-tag {
+  width: 60px;
+}
+
+.skeleton-date-lg {
+  width: 100px;
+}
+
+.skeleton-views-lg {
+  width: 70px;
+}
+
+.skeleton-content {
+  padding-top: 8px;
+}
+
+.skeleton-para {
+  width: 100%;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

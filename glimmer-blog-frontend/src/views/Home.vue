@@ -25,7 +25,23 @@
 
     <!-- 文章列表 -->
     <main class="container">
-      <div class="article-grid" v-if="articles.length">
+      <!-- 骨架屏 -->
+      <div class="article-grid" v-if="loading">
+        <div class="skeleton-card card" v-for="n in 6" :key="n">
+          <div class="skeleton-cover"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-text"></div>
+            <div class="skeleton-line skeleton-text-short"></div>
+            <div class="skeleton-meta">
+              <div class="skeleton-line skeleton-date"></div>
+              <div class="skeleton-line skeleton-views"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 文章列表 -->
+      <div class="article-grid" v-else-if="articles.length">
         <ArticleCard v-for="article in articles" :key="article.id" :article="article" />
       </div>
       <div v-else class="empty-state">
@@ -52,6 +68,7 @@ const articles = ref([])
 const page = ref(1)
 const totalPages = ref(1)
 const searchQuery = ref('')
+const loading = ref(true)
 let searchTimer = null
 let clockTimer = null
 
@@ -89,6 +106,7 @@ onUnmounted(() => {
 })
 
 async function loadArticles(p, categoryId, tagId) {
+  loading.value = true
   try {
     const params = { page: p, size: 9 }
     if (categoryId) params.categoryId = categoryId
@@ -99,6 +117,8 @@ async function loadArticles(p, categoryId, tagId) {
     page.value = p
   } catch (err) {
     console.error('加载文章失败', err)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -225,5 +245,68 @@ async function doSearch(q, p) {
   .hero { padding: 60px 0 24px; }
   .clock-time { font-size: 42px; }
   .article-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .article-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 骨架屏样式 */
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-body {
+  padding: 20px;
+}
+
+.skeleton-line {
+  height: 14px;
+  background: var(--color-bg-alt);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 18px;
+}
+
+.skeleton-text {
+  width: 100%;
+}
+
+.skeleton-text-short {
+  width: 50%;
+}
+
+.skeleton-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.skeleton-date {
+  width: 80px;
+}
+
+.skeleton-views {
+  width: 50px;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

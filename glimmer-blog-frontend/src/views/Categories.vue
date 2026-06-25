@@ -4,7 +4,15 @@
 
     <section class="container">
       <h1 class="page-title">分类</h1>
-      <div class="category-grid" v-if="categories.length">
+      <!-- 骨架屏 -->
+      <div class="category-grid" v-if="loading">
+        <div class="skeleton-category card" v-for="n in 4" :key="n">
+          <div class="skeleton-cat-icon"></div>
+          <div class="skeleton-cat-name"></div>
+        </div>
+      </div>
+      <!-- 分类列表 -->
+      <div class="category-grid" v-else-if="categories.length">
         <router-link v-for="cat in categories" :key="cat.id"
                      :to="`/?categoryId=${cat.id}`" class="category-card card">
           <div class="category-icon">
@@ -31,6 +39,7 @@ import NavBar from '../components/NavBar.vue'
 import Footer from '../components/Footer.vue'
 
 const categories = ref([])
+const loading = ref(true)
 
 onMounted(async () => {
   try {
@@ -38,6 +47,8 @@ onMounted(async () => {
     categories.value = res.data
   } catch (err) {
     console.error('加载分类失败', err)
+  } finally {
+    loading.value = false
   }
 })
 </script>
@@ -85,5 +96,48 @@ onMounted(async () => {
   text-align: center;
   padding: 80px 0;
   color: var(--color-text-sub);
+}
+
+/* 骨架屏样式 */
+.skeleton-category {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+  pointer-events: none;
+}
+
+.skeleton-cat-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--color-bg-alt);
+  border-radius: 50%;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-cat-name {
+  width: 60px;
+  height: 16px;
+  background: var(--color-bg-alt);
+  border-radius: 4px;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 768px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 </style>
