@@ -18,8 +18,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
            nativeQuery = true)
     Page<Article> findByTagIdAndIsPublishedTrue(@Param("tagId") Long tagId, Pageable pageable);
 
-    Page<Article> findByIsPublishedTrueAndTitleContainingOrIsPublishedTrueAndContentContaining(
-            String title, String content, Pageable pageable);
+    @Query("SELECT DISTINCT a FROM Article a WHERE a.isPublished = true AND (a.title LIKE %:q% OR a.content LIKE %:q%)")
+    Page<Article> searchPublished(@Param("q") String q, Pageable pageable);
 
     @Query(value = "SELECT * FROM article ORDER BY created_at DESC",
            countQuery = "SELECT COUNT(*) FROM article",

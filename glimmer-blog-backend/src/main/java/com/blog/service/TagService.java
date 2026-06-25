@@ -2,9 +2,11 @@ package com.blog.service;
 
 import com.blog.dto.TagDTO;
 import com.blog.model.Tag;
+import com.blog.repository.ArticleTagRepository;
 import com.blog.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,10 +15,12 @@ import java.util.stream.Collectors;
 public class TagService {
 
     private final TagRepository tagRepository;
+    private final ArticleTagRepository articleTagRepository;
 
     @Autowired
-    public TagService(TagRepository tagRepository) {
+    public TagService(TagRepository tagRepository, ArticleTagRepository articleTagRepository) {
         this.tagRepository = tagRepository;
+        this.articleTagRepository = articleTagRepository;
     }
 
     public List<TagDTO> getAllTags() {
@@ -34,9 +38,11 @@ public class TagService {
         return toDTO(tag);
     }
 
+    @Transactional
     public void deleteTag(Long id) {
         Tag tag = tagRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("标签不存在"));
+        articleTagRepository.deleteByTagId(id);
         tagRepository.delete(tag);
     }
 

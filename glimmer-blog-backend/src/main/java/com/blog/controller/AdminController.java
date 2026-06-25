@@ -74,7 +74,7 @@ public class AdminController {
     public ApiResponse<Map<String, String>> uploadMd(@RequestParam("file") MultipartFile file) {
         try {
             String filename = file.getOriginalFilename();
-            String content = new String(file.getBytes());
+            String content = new String(file.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
             return ApiResponse.ok(articleService.uploadMd(filename, content));
         } catch (IOException e) {
             throw new RuntimeException("文件读取失败");
@@ -83,13 +83,19 @@ public class AdminController {
 
     // ===== 图片上传 =====
 
+    private static final java.util.Set<String> ALLOWED_IMG_EXT =
+            java.util.Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+
     @PostMapping("/upload/image")
     public ApiResponse<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             String originalFilename = file.getOriginalFilename();
             String ext = originalFilename != null && originalFilename.contains(".")
-                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                    : ".jpg";
+                    ? originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase()
+                    : "";
+            if (!ALLOWED_IMG_EXT.contains(ext)) {
+                throw new RuntimeException("不支持的图片格式，仅允许 jpg/png/gif/webp");
+            }
             String newFilename = UUID.randomUUID().toString().replace("-", "") + ext;
 
             Path uploadPath = Paths.get(blogConfig.getUploadDir());

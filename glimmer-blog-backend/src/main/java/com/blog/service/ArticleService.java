@@ -61,18 +61,17 @@ public class ArticleService {
     public ArticleDetailResponse getArticleDetail(Long id) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
-
-        // 增加阅读量
+        if (!Boolean.TRUE.equals(article.getIsPublished())) {
+            throw new RuntimeException("文章不存在");
+        }
         article.setViews(article.getViews() + 1);
         articleRepository.save(article);
-
         return toDetailResponse(article);
     }
 
     public PageResponse<ArticleListResponse> searchArticles(String q, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Article> articlePage = articleRepository
-                .findByIsPublishedTrueAndTitleContainingOrIsPublishedTrueAndContentContaining(q, q, pageable);
+        Page<Article> articlePage = articleRepository.searchPublished(q, pageable);
         return toPageResponse(articlePage);
     }
 

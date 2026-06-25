@@ -61,14 +61,8 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void updateSortOrder(java.util.List<Long> sortedIds) {
-        for (int i = 0; i < sortedIds.size(); i++) {
-            categoryRepository.findById(sortedIds.get(i)).ifPresent(cat -> {
-                cat.setSortOrder(sortedIds.indexOf(sortedIds.get(i)));
-                categoryRepository.save(cat);
-            });
-        }
-        // 按新顺序设置 sortOrder
         for (int i = 0; i < sortedIds.size(); i++) {
             final int order = i;
             categoryRepository.findById(sortedIds.get(i)).ifPresent(cat -> {

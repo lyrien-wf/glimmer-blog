@@ -29,8 +29,13 @@
       <TocNav :content="article.htmlContent" />
     </div>
 
-    <div v-else class="loading-state container">
+    <div v-else-if="!error" class="loading-state container">
       <p>加载中...</p>
+    </div>
+    <div v-else class="error-state container">
+      <h2>文章加载失败</h2>
+      <p>{{ error }}</p>
+      <router-link to="/" class="btn btn-primary">返回首页</router-link>
     </div>
 
     <Footer />
@@ -38,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { getArticle } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
@@ -49,6 +54,7 @@ import 'highlight.js/styles/github-dark.css'
 
 const route = useRoute()
 const article = ref(null)
+const error = ref('')
 
 const coverStyle = computed(() => {
   if (article.value?.coverUrl) return {}
@@ -61,28 +67,23 @@ onMounted(async () => {
     article.value = res.data
     document.title = article.value.title + ' - Glimmer Blog'
 
-    // 代码高亮
-    setTimeout(() => {
-      document.querySelectorAll('pre code').forEach(block => {
-        hljs.highlightElement(block)
-      })
-      // 给代码块添加语言标签
-      document.querySelectorAll('pre code').forEach(block => {
-        const lang = block.className.replace('hljs ', '').replace('language-', '')
-        if (lang) {
-          const pre = block.parentElement
-          if (!pre.querySelector('.code-lang')) {
-            const label = document.createElement('span')
-            label.className = 'code-lang'
-            label.textContent = lang
-            pre.style.position = 'relative'
-            pre.appendChild(label)
-          }
+    await nextTick()
+    document.querySelectorAll('pre code').forEach(block => {
+      hljs.highlightElement(block)
+      const lang = block.className.replace('hljs ', '').replace('language-', '')
+      if (lang) {
+        const pre = block.parentElement
+        if (pre && !pre.querySelector('.code-lang')) {
+          const label = document.createElement('span')
+          label.className = 'code-lang'
+          label.textContent = lang
+          pre.style.position = 'relative'
+          pre.appendChild(label)
         }
-      })
-    }, 100)
+      }
+    })
   } catch (err) {
-    console.error('加载文章失败', err)
+    error.value = '文章不存在或已被删除'
   }
 })
 
@@ -145,6 +146,21 @@ function formatDate(dateStr) {
   padding: 120px 0;
   text-align: center;
   color: var(--color-text-sub);
+}
+
+.error-state {
+  padding: 120px 0;
+  text-align: center;
+}
+
+.error-state h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.error-state p {
+  color: var(--color-text-sub);
+  margin-bottom: 24px;
 }
 
 /* 代码语言标签 */

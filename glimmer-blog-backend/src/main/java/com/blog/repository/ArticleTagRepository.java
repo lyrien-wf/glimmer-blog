@@ -9,4 +9,5 @@ import java.util.List;
 public interface ArticleTagRepository extends JpaRepository<ArticleTag, ArticleTagId> {
     List<ArticleTag> findByArticleId(Long articleId);
     void deleteByArticleId(Long articleId);
+    void deleteByTagId(Long tagId);
 }

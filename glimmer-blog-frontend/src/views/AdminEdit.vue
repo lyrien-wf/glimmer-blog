@@ -135,11 +135,11 @@ onMounted(async () => {
       const res = await getArticle(route.params.id)
       const data = res.data
       form.value.title = data.title
-      form.value.content = data.htmlContent || ''
+      form.value.content = data.content || ''
       form.value.summary = data.summary || ''
       form.value.coverUrl = data.coverUrl || ''
       form.value.categoryId = data.category?.id || null
-      form.value.isPublished = true
+      form.value.isPublished = data.isPublished ?? false
 
       // 设置编辑器内容（用 markdown 源码）
       vditor.setValue(data.content || '')
