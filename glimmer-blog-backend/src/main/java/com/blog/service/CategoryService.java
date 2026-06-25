@@ -25,6 +25,7 @@ public class CategoryService {
 
     public List<CategoryDTO> getAllCategories() {
         return categoryRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(cat -> cat.getSortOrder() != null ? cat.getSortOrder() : 0))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -60,10 +61,28 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
+    public void updateSortOrder(java.util.List<Long> sortedIds) {
+        for (int i = 0; i < sortedIds.size(); i++) {
+            categoryRepository.findById(sortedIds.get(i)).ifPresent(cat -> {
+                cat.setSortOrder(sortedIds.indexOf(sortedIds.get(i)));
+                categoryRepository.save(cat);
+            });
+        }
+        // 按新顺序设置 sortOrder
+        for (int i = 0; i < sortedIds.size(); i++) {
+            final int order = i;
+            categoryRepository.findById(sortedIds.get(i)).ifPresent(cat -> {
+                cat.setSortOrder(order);
+                categoryRepository.save(cat);
+            });
+        }
+    }
+
     private CategoryDTO toDTO(Category category) {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
         dto.setName(category.getName());
+        dto.setSortOrder(category.getSortOrder());
         return dto;
     }
 }

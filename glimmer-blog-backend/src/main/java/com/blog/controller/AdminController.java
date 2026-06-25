@@ -126,6 +126,12 @@ public class AdminController {
         return ApiResponse.ok();
     }
 
+    @PutMapping("/categories/sort")
+    public ApiResponse<Void> sortCategories(@RequestBody java.util.Map<String, java.util.List<Long>> body) {
+        categoryService.updateSortOrder(body.get("sortedIds"));
+        return ApiResponse.ok();
+    }
+
     // ===== 标签管理 =====
 
     @PostMapping("/tags")

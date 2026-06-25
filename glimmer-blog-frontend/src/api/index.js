@@ -79,6 +79,9 @@ export const deleteCategory = (id) =>
 export const updateCategory = (id, name) =>
   api.put(`/api/admin/categories/${id}`, { name })
 
+export const sortCategories = (sortedIds) =>
+  api.put('/api/admin/categories/sort', { sortedIds })
+
 export const createTag = (name) =>
   api.post('/api/admin/tags', { name })
 

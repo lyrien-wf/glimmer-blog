@@ -21,8 +21,9 @@ ON DUPLICATE KEY UPDATE `username` = `username`;
 
 -- 分类表
 CREATE TABLE IF NOT EXISTS `category` (
-  `id`   BIGINT      NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(50) NOT NULL UNIQUE,
+  `id`         BIGINT      NOT NULL AUTO_INCREMENT,
+  `name`       VARCHAR(50) NOT NULL UNIQUE,
+  `sort_order` INT         NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 );
 
