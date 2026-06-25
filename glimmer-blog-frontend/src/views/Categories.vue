@@ -3,7 +3,16 @@
     <NavBar />
 
     <section class="container">
-      <h1 class="page-title">分类</h1>
+      <div class="page-header">
+        <h1 class="page-title">分类</h1>
+        <router-link to="/" class="back-home">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+          返回首页
+        </router-link>
+      </div>
       <!-- 骨架屏 -->
       <div class="category-grid" v-if="loading">
         <div class="skeleton-category card" v-for="n in 4" :key="n">
@@ -58,11 +67,35 @@ onMounted(async () => {
   padding-top: 56px;
 }
 
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 60px 0 32px;
+}
+
 .page-title {
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin: 60px 0 32px;
+}
+
+.back-home {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--color-text-sub);
+  text-decoration: none;
+  transition: all var(--transition);
+}
+
+.back-home:hover {
+  background: var(--color-bg);
+  color: var(--color-accent);
 }
 
 .category-grid {
