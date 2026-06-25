@@ -102,12 +102,38 @@ const selectedTags = ref([])
 const newTagName = ref('')
 const saving = ref(false)
 let vditor = null
+let pendingContent = null // 待设置的内容
 
 onMounted(async () => {
   // 加载分类和标签
   const [catRes, tagRes] = await Promise.all([getCategories(), getTags()])
   categories.value = catRes.data
   allTags.value = tagRes.data
+
+  // 如果是编辑模式，先加载文章数据
+  if (isEdit) {
+    try {
+      const res = await getAdminArticle(route.params.id)
+      const data = res.data
+      form.value.title = data.title
+      form.value.content = data.content || ''
+      form.value.summary = data.summary || ''
+      form.value.coverUrl = data.coverUrl || ''
+      form.value.categoryId = data.category?.id || null
+      form.value.isPublished = data.isPublished ?? false
+
+      // 保存待设置的内容
+      pendingContent = data.content || ''
+
+      // 设置已选标签
+      if (data.tags?.length) {
+        selectedTags.value = [...data.tags]
+        form.value.tagIds = data.tags.map(t => t.id)
+      }
+    } catch (err) {
+      console.error('加载文章失败', err)
+    }
+  }
 
   // 初始化编辑器
   await nextTick()
@@ -126,33 +152,15 @@ onMounted(async () => {
     ],
     input: (val) => {
       form.value.content = val
+    },
+    after: () => {
+      // Vditor 初始化完成后，设置待设置的内容
+      if (pendingContent !== null) {
+        vditor.setValue(pendingContent)
+        pendingContent = null
+      }
     }
   })
-
-  // 如果是编辑模式，加载文章数据
-  if (isEdit) {
-    try {
-      const res = await getAdminArticle(route.params.id)
-      const data = res.data
-      form.value.title = data.title
-      form.value.content = data.content || ''
-      form.value.summary = data.summary || ''
-      form.value.coverUrl = data.coverUrl || ''
-      form.value.categoryId = data.category?.id || null
-      form.value.isPublished = data.isPublished ?? false
-
-      // 设置编辑器内容（用 markdown 源码）
-      vditor.setValue(data.content || '')
-
-      // 设置已选标签
-      if (data.tags?.length) {
-        selectedTags.value = [...data.tags]
-        form.value.tagIds = data.tags.map(t => t.id)
-      }
-    } catch (err) {
-      console.error('加载文章失败', err)
-    }
-  }
 })
 
 onUnmounted(() => {

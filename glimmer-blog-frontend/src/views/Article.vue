@@ -101,19 +101,41 @@ onMounted(async () => {
       })
     }
 
-    // 代码高亮
+    // 代码高亮 + 复制按钮
     document.querySelectorAll('pre code').forEach(block => {
       hljs.highlightElement(block)
+
+      const pre = block.parentElement
+      if (!pre) return
+
+      // 添加语言标签
       const lang = block.className.replace('hljs ', '').replace('language-', '')
-      if (lang) {
-        const pre = block.parentElement
-        if (pre && !pre.querySelector('.code-lang')) {
-          const label = document.createElement('span')
-          label.className = 'code-lang'
-          label.textContent = lang
-          pre.style.position = 'relative'
-          pre.appendChild(label)
-        }
+      if (lang && !pre.querySelector('.code-lang')) {
+        const label = document.createElement('span')
+        label.className = 'code-lang'
+        label.textContent = lang
+        pre.style.position = 'relative'
+        pre.appendChild(label)
+      }
+
+      // 添加复制按钮
+      if (!pre.querySelector('.code-copy-btn')) {
+        const copyBtn = document.createElement('button')
+        copyBtn.className = 'code-copy-btn'
+        copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`
+        copyBtn.title = '复制代码'
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(block.textContent).then(() => {
+            copyBtn.classList.add('copied')
+            copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>`
+            setTimeout(() => {
+              copyBtn.classList.remove('copied')
+              copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`
+            }, 2000)
+          })
+        })
+        pre.style.position = 'relative'
+        pre.appendChild(copyBtn)
       }
     })
   } catch (err) {
@@ -223,6 +245,45 @@ function formatDate(dateStr) {
   color: rgba(255, 255, 255, 0.4);
   font-family: var(--font-mono);
   text-transform: uppercase;
+}
+
+/* 复制按钮 */
+:deep(.code-copy-btn) {
+  position: absolute;
+  top: 8px;
+  right: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+:deep(pre:hover .code-copy-btn) {
+  opacity: 1;
+}
+
+:deep(.code-copy-btn:hover) {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.code-copy-btn.copied) {
+  color: #34c759;
+}
+
+/* 代码块保持格式 */
+:deep(pre code) {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
 }
 
 /* 骨架屏样式 */
