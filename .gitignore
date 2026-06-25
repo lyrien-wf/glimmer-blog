@@ -1,20 +1,20 @@
 # === Backend ===
-blog-backend/target/
-blog-backend/*.iml
-blog-backend/.idea/
-blog-backend/.mvn/
-blog-backend/mvnw
-blog-backend/mvnw.cmd
-blog-backend/uploads/
+glimmer-blog-backend/target/
+glimmer-blog-backend/*.iml
+glimmer-blog-backend/.idea/
+glimmer-blog-backend/.mvn/
+glimmer-blog-backend/mvnw
+glimmer-blog-backend/mvnw.cmd
+glimmer-blog-backend/uploads/
 *.jar
 *.war
 *.class
 
 # === Frontend ===
-blog-frontend/node_modules/
-blog-frontend/dist/
-blog-frontend/.DS_Store
-blog-frontend/*.local
+glimmer-blog-frontend/node_modules/
+glimmer-blog-frontend/dist/
+glimmer-blog-frontend/.DS_Store
+glimmer-blog-frontend/*.local
 
 # === IDE ===
 .vscode/

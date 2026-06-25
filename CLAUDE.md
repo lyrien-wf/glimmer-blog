@@ -16,7 +16,7 @@ Personal blog website with a Spring Boot 3 backend and Vue 3 frontend. Apple-sty
 
 ### Backend
 ```bash
-cd blog-backend
+cd glimmer-blog-backend
 mvn clean package -DskipTests    # build JAR
 mvn spring-boot:run              # run locally (port 8080)
 ```
@@ -24,7 +24,7 @@ Config: `src/main/resources/application.yml` — update MySQL credentials and `b
 
 ### Frontend
 ```bash
-cd blog-frontend
+cd glimmer-blog-frontend
 npm install
 npm run dev      # dev server on port 5173, proxies /api to localhost:8080
 npm run build    # production build to dist/
@@ -38,7 +38,7 @@ Creates `blog` database with tables: user, category, article, tag, article_tag. 
 
 ## Architecture
 
-### Backend (`blog-backend/src/main/java/com/blog/`)
+### Backend (`glimmer-blog-backend/src/main/java/com/blog/`)
 
 - `BlogApplication.java` — entry point
 - `config/` — JwtUtil (token gen/validate), JwtFilter (OncePerRequestFilter, protects `/api/admin/**`), MarkdownUtil (flexmark), WebConfig (CORS), WebMvcConfig (upload dir mapping), BlogConfig (custom properties), GlobalExceptionHandler
@@ -53,7 +53,7 @@ Creates `blog` database with tables: user, category, article, tag, article_tag. 
 - JWT stored client-side in localStorage, sent via `Authorization: Bearer` header
 - JwtFilter skips public paths (`/api/auth/**`, `/api/articles/**`, `/api/categories`, `/api/tags`) and validates all `/api/admin/**` requests
 
-### Frontend (`blog-frontend/src/`)
+### Frontend (`glimmer-blog-frontend/src/`)
 
 - `api/index.js` — all API calls via axios instance with JWT interceptor
 - `router/index.js` — routes + guard for `/admin/**` (checks localStorage token)
