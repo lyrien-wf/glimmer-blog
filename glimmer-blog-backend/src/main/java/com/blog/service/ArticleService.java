@@ -216,6 +216,7 @@ public class ArticleService {
         ArticleDetailResponse detail = new ArticleDetailResponse();
         detail.setId(listResp.getId());
         detail.setTitle(listResp.getTitle());
+        detail.setContent(article.getContent());  // 添加 Markdown 原文
         detail.setSummary(listResp.getSummary());
         detail.setCoverUrl(listResp.getCoverUrl());
         detail.setCategory(listResp.getCategory());
