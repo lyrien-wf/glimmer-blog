@@ -21,7 +21,10 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     Page<Article> findByIsPublishedTrueAndTitleContainingOrIsPublishedTrueAndContentContaining(
             String title, String content, Pageable pageable);
 
-    Page<Article> findByIsPublishedOrderByCreatedAtDesc(Boolean isPublished, Pageable pageable);
+    @Query(value = "SELECT * FROM article ORDER BY created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM article",
+           nativeQuery = true)
+    Page<Article> findAllOrderByCreatedAtDesc(Pageable pageable);
 
     long countByCategoryId(Long categoryId);
 }

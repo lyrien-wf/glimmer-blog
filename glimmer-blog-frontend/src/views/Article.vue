@@ -59,7 +59,7 @@ onMounted(async () => {
   try {
     const res = await getArticle(route.params.id)
     article.value = res.data
-    document.title = article.value.title + ' - Blog'
+    document.title = article.value.title + ' - Glimmer Blog'
 
     // 代码高亮
     setTimeout(() => {

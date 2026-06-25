@@ -5,7 +5,7 @@
     <!-- Hero -->
     <section class="hero">
       <div class="container">
-        <h1 class="hero-title">Blog</h1>
+        <h1 class="hero-title">Glimmer Blog</h1>
         <p class="hero-subtitle">记录技术与生活</p>
       </div>
     </section>

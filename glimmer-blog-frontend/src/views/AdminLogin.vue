@@ -1,7 +1,7 @@
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1 class="login-title">Blog</h1>
+      <h1 class="login-title">Glimmer Blog</h1>
       <p class="login-subtitle">管理后台</p>
       <form @submit.prevent="handleLogin">
         <div class="form-group">

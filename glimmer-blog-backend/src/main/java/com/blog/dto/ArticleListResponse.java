@@ -13,6 +13,7 @@ public class ArticleListResponse {
     private String coverUrl;
     private CategoryDTO category;
     private List<TagDTO> tags;
+    private Boolean isPublished;
     private Integer views;
     private LocalDateTime createdAt;
 }

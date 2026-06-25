@@ -79,8 +79,8 @@ public class ArticleService {
     // ===== 管理接口 =====
 
     public PageResponse<ArticleListResponse> getAdminArticles(Integer page, Integer size) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Article> articlePage = articleRepository.findByIsPublishedOrderByCreatedAtDesc(null, pageable);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Article> articlePage = articleRepository.findAllOrderByCreatedAtDesc(pageable);
         return toPageResponse(articlePage);
     }
 
@@ -173,6 +173,7 @@ public class ArticleService {
         resp.setSummary(article.getSummary());
         resp.setCoverUrl(article.getCoverUrl());
         resp.setViews(article.getViews());
+        resp.setIsPublished(article.getIsPublished());
         resp.setCreatedAt(article.getCreatedAt());
 
         // 加载分类

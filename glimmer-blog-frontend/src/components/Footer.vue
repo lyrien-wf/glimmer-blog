@@ -1,6 +1,6 @@
 <template>
   <footer class="footer">
-    <p>© {{ year }} Blog. Built with Spring Boot & Vue.</p>
+    <p>© {{ year }} Glimmer Blog. Built with Spring Boot & Vue.</p>
   </footer>
 </template>
 
