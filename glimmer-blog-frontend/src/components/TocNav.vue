@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 
 const props = defineProps({
   content: { type: String, default: '' }
@@ -19,9 +19,13 @@ const props = defineProps({
 
 const headings = ref([])
 const activeIndex = ref(0)
+let observer = null
 
 watch(() => props.content, () => {
-  parseHeadings()
+  // 等待 DOM 渲染完成后再解析
+  nextTick(() => {
+    setTimeout(parseHeadings, 100)
+  })
 }, { immediate: true })
 
 onMounted(() => {
@@ -30,15 +34,21 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
+  if (observer) observer.disconnect()
 })
 
 function parseHeadings() {
-  const div = document.createElement('div')
-  div.innerHTML = props.content
-  const elements = div.querySelectorAll('h1, h2, h3')
-  headings.value = Array.from(elements).map((el, i) => {
-    const id = `heading-${i}`
-    return { level: parseInt(el.tagName[1]), text: el.textContent, id }
+  // 从实际 DOM 中解析标题，确保 ID 与文章内容一致
+  const articleBody = document.querySelector('.article-body')
+  if (!articleBody) return
+
+  const elements = articleBody.querySelectorAll('h1, h2, h3')
+  headings.value = Array.from(elements).map((el) => {
+    return {
+      level: parseInt(el.tagName[1]),
+      text: el.textContent,
+      id: el.id
+    }
   })
 }
 
@@ -65,18 +75,11 @@ function onScroll() {
 
 <style scoped>
 .toc-nav {
-  position: fixed;
-  right: -280px;
-  top: 100px;
-  width: 220px;
-  max-height: calc(100vh - 140px);
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
-}
-
-@media (min-width: 1200px) {
-  .toc-nav {
-    right: max(-280px, calc((100vw - 1100px) / 2 - 280px));
-  }
+  padding-right: 20px;
 }
 
 .toc-title {

@@ -8,25 +8,32 @@
         <img v-if="article.coverUrl" :src="article.coverUrl" :alt="article.title" />
       </div>
 
-      <article class="container article-container">
-        <h1 class="article-title">{{ article.title }}</h1>
-        <div class="article-meta">
-          <span v-if="article.category">{{ article.category.name }}</span>
-          <span v-if="article.category && article.tags?.length">·</span>
-          <span v-for="(tag, i) in article.tags" :key="tag.id">
-            <router-link :to="`/?tagId=${tag.id}`" class="tag">{{ tag.name }}</router-link>
-            <span v-if="i < article.tags.length - 1"> </span>
-          </span>
-          <span v-if="article.tags?.length">·</span>
-          <span>{{ formatDate(article.createdAt) }}</span>
-          <span>·</span>
-          <span>{{ article.views }} 阅读</span>
-        </div>
+      <!-- 三栏布局：目录 | 文章 | (留白) -->
+      <div class="article-layout">
+        <!-- 左侧目录 -->
+        <aside class="article-sidebar">
+          <TocNav :content="article.htmlContent" />
+        </aside>
 
-        <div class="article-body md-content" v-html="article.htmlContent"></div>
-      </article>
+        <!-- 文章主体 -->
+        <article class="article-main">
+          <h1 class="article-title">{{ article.title }}</h1>
+          <div class="article-meta">
+            <span v-if="article.category">{{ article.category.name }}</span>
+            <span v-if="article.category && article.tags?.length">·</span>
+            <span v-for="(tag, i) in article.tags" :key="tag.id">
+              <router-link :to="`/?tagId=${tag.id}`" class="tag">{{ tag.name }}</router-link>
+              <span v-if="i < article.tags.length - 1"> </span>
+            </span>
+            <span v-if="article.tags?.length">·</span>
+            <span>{{ formatDate(article.createdAt) }}</span>
+            <span>·</span>
+            <span>{{ article.views }} 阅读</span>
+          </div>
 
-      <TocNav :content="article.htmlContent" />
+          <div class="article-body md-content" v-html="article.htmlContent"></div>
+        </article>
+      </div>
     </div>
 
     <!-- 骨架屏 -->
@@ -84,6 +91,17 @@ onMounted(async () => {
     document.title = article.value.title + ' - Glimmer Blog'
 
     await nextTick()
+
+    // 为文章标题添加 ID，与目录关联
+    const articleBody = document.querySelector('.article-body')
+    if (articleBody) {
+      const headings = articleBody.querySelectorAll('h1, h2, h3')
+      headings.forEach((el, i) => {
+        el.id = `heading-${i}`
+      })
+    }
+
+    // 代码高亮
     document.querySelectorAll('pre code').forEach(block => {
       hljs.highlightElement(block)
       const lang = block.className.replace('hljs ', '').replace('language-', '')
@@ -128,10 +146,23 @@ function formatDate(dateStr) {
   object-fit: cover;
 }
 
-.article-container {
+/* 三栏布局 */
+.article-layout {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  gap: 48px;
+}
+
+.article-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.article-main {
+  flex: 1;
   max-width: 760px;
-  padding-top: 40px;
-  padding-bottom: 80px;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -257,5 +288,27 @@ function formatDate(dateStr) {
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* 响应式 */
+@media (max-width: 1199px) {
+  .article-sidebar {
+    display: none;
+  }
+  .article-layout {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .article-cover img {
+    height: 240px;
+  }
+  .article-layout {
+    padding: 24px 16px 60px;
+  }
+  .article-title {
+    font-size: 28px;
+  }
 }
 </style>
