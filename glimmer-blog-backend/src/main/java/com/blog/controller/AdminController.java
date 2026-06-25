@@ -51,6 +51,11 @@ public class AdminController {
         return ApiResponse.ok(articleService.getAdminArticles(page, size));
     }
 
+    @GetMapping("/articles/{id}")
+    public ApiResponse<ArticleDetailResponse> getArticle(@PathVariable Long id) {
+        return ApiResponse.ok(articleService.getAdminArticleDetail(id));
+    }
+
     @PostMapping("/articles")
     public ApiResponse<Map<String, Long>> createArticle(@RequestBody ArticleCreateRequest request) {
         Long id = articleService.createArticle(request);

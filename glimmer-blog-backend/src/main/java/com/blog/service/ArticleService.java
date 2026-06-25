@@ -83,6 +83,12 @@ public class ArticleService {
         return toPageResponse(articlePage);
     }
 
+    public ArticleDetailResponse getAdminArticleDetail(Long id) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("文章不存在"));
+        return toDetailResponse(article);
+    }
+
     @Transactional
     public Long createArticle(ArticleCreateRequest req) {
         Article article = new Article();
@@ -215,6 +221,7 @@ public class ArticleService {
         detail.setCategory(listResp.getCategory());
         detail.setTags(listResp.getTags());
         detail.setViews(listResp.getViews());
+        detail.setIsPublished(listResp.getIsPublished());
         detail.setCreatedAt(listResp.getCreatedAt());
         detail.setHtmlContent(article.getHtmlCache());
         detail.setUpdatedAt(article.getUpdatedAt());

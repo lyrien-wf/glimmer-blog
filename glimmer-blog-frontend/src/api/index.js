@@ -49,6 +49,9 @@ export const getTags = () =>
 export const getAdminArticles = (page = 1) =>
   api.get('/api/admin/articles', { params: { page } })
 
+export const getAdminArticle = (id) =>
+  api.get(`/api/admin/articles/${id}`)
+
 export const createArticle = (data) =>
   api.post('/api/admin/articles', data)
 

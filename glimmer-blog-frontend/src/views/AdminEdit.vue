@@ -78,7 +78,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import { getArticle, createArticle, updateArticle, getCategories, getTags, createTag, uploadMd } from '../api/index.js'
+import { getAdminArticle, createArticle, updateArticle, getCategories, getTags, createTag, uploadMd } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
 import ImageUploader from '../components/ImageUploader.vue'
 
@@ -132,7 +132,7 @@ onMounted(async () => {
   // 如果是编辑模式，加载文章数据
   if (isEdit) {
     try {
-      const res = await getArticle(route.params.id)
+      const res = await getAdminArticle(route.params.id)
       const data = res.data
       form.value.title = data.title
       form.value.content = data.content || ''
