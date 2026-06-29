@@ -9,25 +9,21 @@
           <span class="clock-time">{{ clockTime }}</span>
           <span class="clock-date">{{ clockDate }}</span>
         </div>
-        <p class="hero-subtitle" v-if="!currentCategory && !currentTag">记录技术与生活</p>
+        <p class="hero-subtitle">记录技术与生活</p>
       </div>
     </section>
 
-    <!-- 筛选状态指示器 -->
-    <section class="container" v-if="currentCategory || currentTag">
-      <div class="filter-bar">
-        <div class="filter-info">
-          <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
-          </svg>
-          <span class="filter-label">当前筛选：</span>
-          <span class="filter-name">{{ currentCategory?.name || currentTag?.name }}</span>
-        </div>
-        <button class="filter-clear" @click="clearFilter">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-          返回全部
+    <!-- 分类筛选标签 -->
+    <section class="container category-section">
+      <div class="category-tabs">
+        <button :class="['category-tab', { active: !currentCategoryId }]"
+                @click="selectCategory(null)">
+          全部
+        </button>
+        <button v-for="cat in categories" :key="cat.id"
+                :class="['category-tab', { active: currentCategoryId === cat.id }]"
+                @click="selectCategory(cat.id)">
+          {{ cat.name }}
         </button>
       </div>
     </section>
@@ -76,7 +72,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getArticles, searchArticles, getCategories, getTags } from '../api/index.js'
+import { getArticles, searchArticles, getCategories } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
 import Footer from '../components/Footer.vue'
 import ArticleCard from '../components/ArticleCard.vue'
@@ -85,12 +81,12 @@ import Pagination from '../components/Pagination.vue'
 const route = useRoute()
 const router = useRouter()
 const articles = ref([])
+const categories = ref([])
 const page = ref(1)
 const totalPages = ref(1)
 const searchQuery = ref('')
 const loading = ref(true)
-const currentCategory = ref(null)
-const currentTag = ref(null)
+const currentCategoryId = ref(null)
 let searchTimer = null
 let clockTimer = null
 
@@ -115,52 +111,47 @@ onMounted(async () => {
   updateClock()
   clockTimer = setInterval(updateClock, 1000)
 
-  // 获取分类和标签信息
-  await loadFilterInfo()
+  // 加载分类列表
+  try {
+    const res = await getCategories()
+    categories.value = res.data
+  } catch (err) {
+    console.error('加载分类失败', err)
+  }
+
+  // 如果 URL 带有 categoryId 参数，同步选中状态
+  if (route.query.categoryId) {
+    currentCategoryId.value = Number(route.query.categoryId)
+  }
 
   // 加载文章
-  if (route.query.categoryId) {
-    loadArticles(1, route.query.categoryId, route.query.tagId)
-  } else if (route.query.tagId) {
-    loadArticles(1, null, route.query.tagId)
-  } else {
-    loadArticles(1)
-  }
-})
-
-async function loadFilterInfo() {
-  try {
-    if (route.query.categoryId) {
-      const res = await getCategories()
-      currentCategory.value = res.data.find(c => c.id === Number(route.query.categoryId))
-    }
-    if (route.query.tagId) {
-      const res = await getTags()
-      currentTag.value = res.data.find(t => t.id === Number(route.query.tagId))
-    }
-  } catch (err) {
-    console.error('加载筛选信息失败', err)
-  }
-}
-
-function clearFilter() {
-  currentCategory.value = null
-  currentTag.value = null
-  searchQuery.value = ''
-  router.push('/')
   loadArticles(1)
-}
+})
 
 onUnmounted(() => {
   clearInterval(clockTimer)
 })
 
-async function loadArticles(p, categoryId, tagId) {
+function selectCategory(catId) {
+  currentCategoryId.value = catId
+  searchQuery.value = ''
+  page.value = 1
+
+  // 更新 URL
+  if (catId) {
+    router.push({ query: { categoryId: catId } })
+  } else {
+    router.push('/')
+  }
+
+  loadArticles(1)
+}
+
+async function loadArticles(p) {
   loading.value = true
   try {
     const params = { page: p, size: 9 }
-    if (categoryId) params.categoryId = categoryId
-    if (tagId) params.tagId = tagId
+    if (currentCategoryId.value) params.categoryId = currentCategoryId.value
     const res = await getArticles(params)
     articles.value = res.data.list
     totalPages.value = res.data.pages
@@ -176,7 +167,7 @@ function onPageChange(p) {
   if (searchQuery.value) {
     doSearch(searchQuery.value, p)
   } else {
-    loadArticles(p, route.query.categoryId, route.query.tagId)
+    loadArticles(p)
   }
 }
 
@@ -242,60 +233,43 @@ async function doSearch(q, p) {
   color: var(--color-text-sub);
 }
 
-.search-section {
-  margin-bottom: 40px;
+/* 分类筛选标签 */
+.category-section {
+  margin-bottom: 24px;
 }
 
-/* 筛选状态指示器 */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: var(--color-bg-alt);
-  border-radius: var(--radius-md);
-  margin-bottom: 32px;
-}
-
-.filter-info {
+.category-tabs {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.filter-icon {
-  color: var(--color-accent);
-}
-
-.filter-label {
-  font-size: 14px;
-  color: var(--color-text-sub);
-}
-
-.filter-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.filter-clear {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
+.category-tab {
+  padding: 8px 20px;
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
+  border-radius: 100px;
+  font-size: 14px;
   color: var(--color-text-sub);
   cursor: pointer;
   transition: all var(--transition);
 }
 
-.filter-clear:hover {
-  background: var(--color-bg);
+.category-tab:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+.category-tab.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.search-section {
+  margin-bottom: 40px;
 }
 
 .search-box {
@@ -347,10 +321,12 @@ async function doSearch(q, p) {
   .hero { padding: 60px 0 24px; }
   .clock-time { font-size: 42px; }
   .article-grid { grid-template-columns: 1fr; }
-  .filter-bar {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
+  .category-tabs {
+    gap: 6px;
+  }
+  .category-tab {
+    padding: 6px 14px;
+    font-size: 13px;
   }
 }
 

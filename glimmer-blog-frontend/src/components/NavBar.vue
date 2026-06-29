@@ -4,7 +4,6 @@
       <router-link to="/" class="navbar-brand">Glimmer Blog</router-link>
       <ul class="navbar-links">
         <li><router-link to="/">首页</router-link></li>
-        <li><router-link to="/categories">分类</router-link></li>
         <li v-if="isAdmin"><router-link to="/admin/articles">管理</router-link></li>
         <li v-if="!isAdmin"><router-link to="/admin/login">管理</router-link></li>
       </ul>
