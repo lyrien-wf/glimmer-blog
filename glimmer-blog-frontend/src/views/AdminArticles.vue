@@ -8,6 +8,14 @@
         <div class="header-actions">
           <router-link to="/admin/categories" class="btn btn-secondary">分类管理</router-link>
           <router-link to="/admin/articles/edit" class="btn btn-primary">新建文章</router-link>
+          <button class="btn btn-secondary logout-btn" @click="handleLogout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+              <polyline points="16,17 21,12 16,7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            退出登录
+          </button>
         </div>
       </div>
 
@@ -54,13 +62,20 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getAdminArticles, deleteArticle } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
 import Pagination from '../components/Pagination.vue'
 
+const router = useRouter()
 const articles = ref([])
 const page = ref(1)
 const totalPages = ref(1)
+
+function handleLogout() {
+  localStorage.removeItem('blog_token')
+  router.push('/admin/login')
+}
 
 onMounted(() => loadArticles(1))
 
@@ -112,6 +127,12 @@ function formatDate(dateStr) {
 .header-actions {
   display: flex;
   gap: 12px;
+}
+
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .admin-table {
