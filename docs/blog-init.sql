@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS `article` (
   PRIMARY KEY (`id`),
   INDEX `idx_category` (`category_id`),
   INDEX `idx_published` (`is_published`),
-  INDEX `idx_created` (`created_at`)
+  INDEX `idx_created` (`created_at`),
+  FULLTEXT INDEX `ft_search` (`title`, `content`)
 );
 
 -- 标签表
