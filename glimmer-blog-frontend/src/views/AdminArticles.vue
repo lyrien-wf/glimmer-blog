@@ -133,6 +133,13 @@ function formatDate(dateStr) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: #ff9500;
+  color: #fff;
+  border: none;
+}
+
+.logout-btn:hover {
+  background: #ff8c00;
 }
 
 .admin-table {
