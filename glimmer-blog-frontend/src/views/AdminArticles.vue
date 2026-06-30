@@ -6,9 +6,9 @@
       <div class="admin-header">
         <h1>文章管理</h1>
         <div class="header-actions">
-          <router-link to="/admin/categories" class="btn btn-secondary">分类管理</router-link>
-          <router-link to="/admin/articles/edit" class="btn btn-primary">新建文章</router-link>
-          <button class="btn btn-secondary logout-btn" @click="handleLogout">
+          <router-link to="/admin/categories" class="btn header-btn">分类管理</router-link>
+          <router-link to="/admin/articles/edit" class="btn header-btn header-btn-primary">新建文章</router-link>
+          <button class="btn header-btn header-btn-danger" @click="handleLogout">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
               <polyline points="16,17 21,12 16,7"/>
@@ -126,20 +126,54 @@ function formatDate(dateStr) {
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
-.logout-btn {
+/* 统一按钮风格 */
+.header-btn {
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ff9500;
-  color: #fff;
-  border: none;
 }
 
-.logout-btn:hover {
-  background: #ff8c00;
+/* 默认：白底灰边 */
+.header-btn:not(.header-btn-primary):not(.header-btn-danger) {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.header-btn:not(.header-btn-primary):not(.header-btn-danger):hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 主按钮：蓝色 */
+.header-btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border: 1px solid var(--color-accent);
+}
+
+.header-btn-primary:hover {
+  box-shadow: 0 2px 12px rgba(0, 113, 227, 0.4);
+}
+
+/* 危险按钮：橙色 */
+.header-btn-danger {
+  background: #ff9500;
+  color: #fff;
+  border: 1px solid #ff9500;
+}
+
+.header-btn-danger:hover {
+  box-shadow: 0 2px 12px rgba(255, 149, 0, 0.4);
 }
 
 .admin-table {
