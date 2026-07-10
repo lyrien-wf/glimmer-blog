@@ -18,9 +18,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
            nativeQuery = true)
     Page<Article> findByTagIdAndIsPublishedTrue(@Param("tagId") Long tagId, Pageable pageable);
 
-    @Query(value = "SELECT * FROM article a WHERE a.is_published = 1 AND MATCH(a.title, a.content) AGAINST(:q IN BOOLEAN MODE) ORDER BY a.created_at DESC",
-           countQuery = "SELECT COUNT(*) FROM article a WHERE a.is_published = 1 AND MATCH(a.title, a.content) AGAINST(:q IN BOOLEAN MODE)",
-           nativeQuery = true)
+    @Query("SELECT DISTINCT a FROM Article a WHERE a.isPublished = true AND (a.title LIKE %:q% OR a.content LIKE %:q%)")
     Page<Article> searchPublished(@Param("q") String q, Pageable pageable);
 
     @Query(value = "SELECT * FROM article ORDER BY created_at DESC",
