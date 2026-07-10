@@ -108,6 +108,7 @@ function updateClock() {
 }
 
 onMounted(async () => {
+  document.title = 'Glimmer Blog'
   updateClock()
   clockTimer = setInterval(updateClock, 1000)
 

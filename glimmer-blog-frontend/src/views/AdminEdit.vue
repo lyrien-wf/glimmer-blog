@@ -66,7 +66,7 @@
         </div>
 
         <button class="btn btn-primary save-btn" @click="handleSave" :disabled="saving">
-          {{ saving ? '保存中...' : '保存' }}
+          {{ saving ? '保存中...' : (isEdit ? '保存' : '创建') }}
         </button>
       </div>
     </div>
@@ -179,11 +179,11 @@ async function handleSave() {
 
     if (isEdit) {
       await updateArticle(route.params.id, form.value)
-      alert('更新成功')
+      alert('保存成功')
     } else {
-      const res = await createArticle(form.value)
+      await createArticle(form.value)
       alert('创建成功')
-      router.push(`/admin/articles/edit/${res.data.id}`)
+      router.push('/admin/articles')
     }
   } catch (err) {
     alert('保存失败：' + (err.response?.data?.message || err.message))
