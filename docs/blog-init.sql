@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `article_tag` (
 );
 
 -- 预置分类
-INSERT INTO `category` (name) VALUES ('技术'), ('随笔'), ('教程'), ('生活')
+INSERT INTO `category` (name) VALUES ('技术'), ('随笔'), ('教程'), ('生活'), ('其他')
 ON DUPLICATE KEY UPDATE `name` = `name`;
 
 -- 预置标签

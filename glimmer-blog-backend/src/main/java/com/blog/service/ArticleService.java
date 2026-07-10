@@ -4,6 +4,7 @@ import com.blog.config.MarkdownUtil;
 import com.blog.dto.*;
 import com.blog.model.Article;
 import com.blog.model.ArticleTag;
+import com.blog.model.Category;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.ArticleTagRepository;
 import com.blog.repository.CategoryRepository;
@@ -96,7 +97,7 @@ public class ArticleService {
         article.setContent(req.getContent());
         article.setSummary(req.getSummary());
         article.setCoverUrl(req.getCoverUrl());
-        article.setCategoryId(req.getCategoryId());
+        article.setCategoryId(req.getCategoryId() != null ? req.getCategoryId() : getDefaultCategoryId());
         article.setIsPublished(req.getIsPublished() != null && req.getIsPublished());
         article.setHtmlCache(markdownUtil.renderToHtml(req.getContent()));
 
@@ -120,7 +121,7 @@ public class ArticleService {
         article.setContent(req.getContent());
         article.setSummary(req.getSummary());
         article.setCoverUrl(req.getCoverUrl());
-        article.setCategoryId(req.getCategoryId());
+        article.setCategoryId(req.getCategoryId() != null ? req.getCategoryId() : getDefaultCategoryId());
         article.setIsPublished(req.getIsPublished() != null && req.getIsPublished());
         article.setHtmlCache(markdownUtil.renderToHtml(req.getContent()));
 
@@ -227,5 +228,14 @@ public class ArticleService {
         detail.setHtmlContent(article.getHtmlCache());
         detail.setUpdatedAt(article.getUpdatedAt());
         return detail;
+    }
+
+    /**
+     * 获取默认分类 ID（"其他"分类）
+     */
+    private Long getDefaultCategoryId() {
+        return categoryRepository.findByName("其他")
+                .map(Category::getId)
+                .orElse(null);
     }
 }
