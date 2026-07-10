@@ -26,7 +26,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleRuntime(RuntimeException ex) {
-        return ApiResponse.error(400, ex.getMessage());
+        // 不泄露内部异常信息，返回通用提示
+        String message = ex.getMessage();
+        if (message == null || message.contains("Exception") || message.contains("error")) {
+            return ApiResponse.error(400, "操作失败，请稍后重试");
+        }
+        return ApiResponse.error(400, message);
     }
 
     @ExceptionHandler(Exception.class)

@@ -23,8 +23,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../api/index.js'
+import { useAuth } from '../stores/auth.js'
 
 const router = useRouter()
+const { login: authLogin } = useAuth()
 const username = ref('')
 const password = ref('')
 const error = ref('')
@@ -35,7 +37,7 @@ async function handleLogin() {
   loading.value = true
   try {
     const res = await login(username.value, password.value)
-    localStorage.setItem('blog_token', res.data.token)
+    authLogin(res.data.token)
     router.push('/admin/articles')
   } catch (err) {
     error.value = err.response?.data?.message || '登录失败'

@@ -51,10 +51,4 @@ public class Article {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Transient
-    private Category categoryObj;
-
-    @Transient
-    private java.util.List<Tag> tags;
 }

@@ -5,6 +5,7 @@ import com.blog.dto.*;
 import com.blog.model.Article;
 import com.blog.model.ArticleTag;
 import com.blog.model.Category;
+import com.blog.model.Tag;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.ArticleTagRepository;
 import com.blog.repository.CategoryRepository;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +31,9 @@ public class ArticleService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final MarkdownUtil markdownUtil;
+
+    // 内存中的浏览量计数器，定时批量回写数据库
+    private final ConcurrentHashMap<Long, Long> viewCounters = new ConcurrentHashMap<>();
 
     @Autowired
     public ArticleService(ArticleRepository articleRepository,
@@ -40,6 +46,24 @@ public class ArticleService {
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.markdownUtil = markdownUtil;
+    }
+
+    /**
+     * 批量回写浏览量到数据库（由定时任务调用）
+     */
+    @Transactional
+    public void flushViewCounts() {
+        if (viewCounters.isEmpty()) return;
+
+        Map<Long, Long> snapshot = new HashMap<>(viewCounters);
+        viewCounters.clear();
+
+        for (Map.Entry<Long, Long> entry : snapshot.entrySet()) {
+            articleRepository.findById(entry.getKey()).ifPresent(article -> {
+                article.setViews(article.getViews() + entry.getValue().intValue());
+                articleRepository.save(article);
+            });
+        }
     }
 
     // ===== 公开接口 =====
@@ -65,8 +89,9 @@ public class ArticleService {
         if (!Boolean.TRUE.equals(article.getIsPublished())) {
             throw new RuntimeException("文章不存在");
         }
-        article.setViews(article.getViews() + 1);
-        articleRepository.save(article);
+        // 使用内存计数器，避免每次访问都写库
+        viewCounters.merge(id, 1L, Long::sum);
+        article.setViews(article.getViews() + viewCounters.getOrDefault(id, 0L).intValue());
         return toDetailResponse(article);
     }
 
@@ -166,13 +191,45 @@ public class ArticleService {
     }
 
     private PageResponse<ArticleListResponse> toPageResponse(Page<Article> page) {
-        List<ArticleListResponse> list = page.getContent().stream()
-                .map(this::toListResponse)
+        List<Article> articles = page.getContent();
+        if (articles.isEmpty()) {
+            return new PageResponse<>(page.getTotalElements(), page.getTotalPages(), Collections.emptyList());
+        }
+
+        // 批量加载分类（1 次查询代替 N 次）
+        Set<Long> categoryIds = articles.stream()
+                .map(Article::getCategoryId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, Category> categoryMap = categoryIds.isEmpty() ? Collections.emptyMap() :
+                categoryRepository.findAllById(categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getId, c -> c));
+
+        // 批量加载文章-标签关联（1 次查询代替 N 次）
+        List<Long> articleIds = articles.stream().map(Article::getId).collect(Collectors.toList());
+        Map<Long, List<ArticleTag>> articleTagsMap = articleTagRepository.findByArticleIdIn(articleIds).stream()
+                .collect(Collectors.groupingBy(ArticleTag::getArticleId));
+
+        // 批量加载标签（1 次查询代替 N 次）
+        Set<Long> allTagIds = articleTagsMap.values().stream()
+                .flatMap(List::stream)
+                .map(ArticleTag::getTagId)
+                .collect(Collectors.toSet());
+        Map<Long, Tag> tagMap = allTagIds.isEmpty() ? Collections.emptyMap() :
+                tagRepository.findAllById(allTagIds).stream()
+                        .collect(Collectors.toMap(Tag::getId, t -> t));
+
+        // 组装结果
+        List<ArticleListResponse> list = articles.stream()
+                .map(article -> toListResponse(article, categoryMap, articleTagsMap, tagMap))
                 .collect(Collectors.toList());
         return new PageResponse<>(page.getTotalElements(), page.getTotalPages(), list);
     }
 
-    private ArticleListResponse toListResponse(Article article) {
+    private ArticleListResponse toListResponse(Article article,
+                                               Map<Long, Category> categoryMap,
+                                               Map<Long, List<ArticleTag>> articleTagsMap,
+                                               Map<Long, Tag> tagMap) {
         ArticleListResponse resp = new ArticleListResponse();
         resp.setId(article.getId());
         resp.setTitle(article.getTitle());
@@ -182,21 +239,21 @@ public class ArticleService {
         resp.setIsPublished(article.getIsPublished());
         resp.setCreatedAt(article.getCreatedAt());
 
-        // 加载分类
-        if (article.getCategoryId() != null) {
-            categoryRepository.findById(article.getCategoryId()).ifPresent(cat -> {
-                CategoryDTO dto = new CategoryDTO();
-                dto.setId(cat.getId());
-                dto.setName(cat.getName());
-                resp.setCategory(dto);
-            });
+        // 从缓存 Map 中获取分类
+        if (article.getCategoryId() != null && categoryMap.containsKey(article.getCategoryId())) {
+            Category cat = categoryMap.get(article.getCategoryId());
+            CategoryDTO dto = new CategoryDTO();
+            dto.setId(cat.getId());
+            dto.setName(cat.getName());
+            resp.setCategory(dto);
         }
 
-        // 加载标签
-        List<ArticleTag> articleTags = articleTagRepository.findByArticleId(article.getId());
+        // 从缓存 Map 中获取标签
+        List<ArticleTag> articleTags = articleTagsMap.getOrDefault(article.getId(), Collections.emptyList());
         if (!articleTags.isEmpty()) {
-            List<Long> tagIds = articleTags.stream().map(ArticleTag::getTagId).collect(Collectors.toList());
-            List<TagDTO> tags = tagRepository.findAllById(tagIds).stream()
+            List<TagDTO> tags = articleTags.stream()
+                    .map(at -> tagMap.get(at.getTagId()))
+                    .filter(Objects::nonNull)
                     .map(tag -> {
                         TagDTO dto = new TagDTO();
                         dto.setId(tag.getId());
@@ -213,20 +270,45 @@ public class ArticleService {
     }
 
     private ArticleDetailResponse toDetailResponse(Article article) {
-        ArticleListResponse listResp = toListResponse(article);
         ArticleDetailResponse detail = new ArticleDetailResponse();
-        detail.setId(listResp.getId());
-        detail.setTitle(listResp.getTitle());
-        detail.setContent(article.getContent());  // 添加 Markdown 原文
-        detail.setSummary(listResp.getSummary());
-        detail.setCoverUrl(listResp.getCoverUrl());
-        detail.setCategory(listResp.getCategory());
-        detail.setTags(listResp.getTags());
-        detail.setViews(listResp.getViews());
-        detail.setIsPublished(listResp.getIsPublished());
-        detail.setCreatedAt(listResp.getCreatedAt());
+        detail.setId(article.getId());
+        detail.setTitle(article.getTitle());
+        detail.setContent(article.getContent());
+        detail.setSummary(article.getSummary());
+        detail.setCoverUrl(article.getCoverUrl());
+        detail.setViews(article.getViews());
+        detail.setIsPublished(article.getIsPublished());
+        detail.setCreatedAt(article.getCreatedAt());
         detail.setHtmlContent(article.getHtmlCache());
         detail.setUpdatedAt(article.getUpdatedAt());
+
+        // 加载分类
+        if (article.getCategoryId() != null) {
+            categoryRepository.findById(article.getCategoryId()).ifPresent(cat -> {
+                CategoryDTO dto = new CategoryDTO();
+                dto.setId(cat.getId());
+                dto.setName(cat.getName());
+                detail.setCategory(dto);
+            });
+        }
+
+        // 加载标签
+        List<ArticleTag> articleTags = articleTagRepository.findByArticleId(article.getId());
+        if (!articleTags.isEmpty()) {
+            List<Long> tagIds = articleTags.stream().map(ArticleTag::getTagId).collect(Collectors.toList());
+            List<TagDTO> tags = tagRepository.findAllById(tagIds).stream()
+                    .map(tag -> {
+                        TagDTO dto = new TagDTO();
+                        dto.setId(tag.getId());
+                        dto.setName(tag.getName());
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+            detail.setTags(tags);
+        } else {
+            detail.setTags(Collections.emptyList());
+        }
+
         return detail;
     }
 
