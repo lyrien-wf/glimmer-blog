@@ -219,8 +219,12 @@ async function doSearch(q, p) {
   font-weight: 200;
   letter-spacing: 4px;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-  line-height: 1;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  line-height: 1.1;
 }
 
 .clock-date {
@@ -264,9 +268,10 @@ async function doSearch(q, p) {
 }
 
 .category-tab.active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--gradient-brand);
+  border-color: transparent;
   color: #fff;
+  box-shadow: 0 4px 14px var(--color-accent-glow);
 }
 
 .search-section {
@@ -309,6 +314,26 @@ async function doSearch(q, p) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 24px;
+}
+
+/* 卡片依次淡入 */
+.article-grid > * {
+  animation: card-fade-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+.article-grid > *:nth-child(1) { animation-delay: 0.03s; }
+.article-grid > *:nth-child(2) { animation-delay: 0.08s; }
+.article-grid > *:nth-child(3) { animation-delay: 0.13s; }
+.article-grid > *:nth-child(4) { animation-delay: 0.18s; }
+.article-grid > *:nth-child(5) { animation-delay: 0.23s; }
+.article-grid > *:nth-child(6) { animation-delay: 0.28s; }
+.article-grid > *:nth-child(7) { animation-delay: 0.33s; }
+.article-grid > *:nth-child(8) { animation-delay: 0.38s; }
+.article-grid > *:nth-child(9) { animation-delay: 0.43s; }
+
+@keyframes card-fade-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .empty-state {
