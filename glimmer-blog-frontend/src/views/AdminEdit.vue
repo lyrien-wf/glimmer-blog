@@ -2,8 +2,6 @@
   <div class="admin-page">
     <NavBar />
 
-    <Toast ref="toast" />
-
     <div class="editor-layout" style="padding-top: 56px;">
       <!-- 左侧编辑区 -->
       <div class="editor-main">
@@ -83,11 +81,10 @@ import 'vditor/dist/index.css'
 import { getAdminArticle, createArticle, updateArticle, getCategories, getTags, createTag, uploadMd } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
 import ImageUploader from '../components/ImageUploader.vue'
-import Toast from '../components/Toast.vue'
+import { toast } from '../stores/toast.js'
 
 const route = useRoute()
 const router = useRouter()
-const toast = ref(null)
 const isEdit = !!route.params.id
 
 const form = ref({
@@ -173,7 +170,7 @@ onUnmounted(() => {
 
 async function handleSave() {
   if (!form.value.title.trim()) {
-    toast.value.error('请输入标题')
+    toast.error('请输入标题')
     return
   }
 
@@ -183,14 +180,14 @@ async function handleSave() {
 
     if (isEdit) {
       await updateArticle(route.params.id, form.value)
-      toast.value.success('保存成功')
+      toast.success('保存成功')
     } else {
       await createArticle(form.value)
-      toast.value.success('创建成功')
+      toast.success('创建成功')
       router.push('/admin/articles')
     }
   } catch (err) {
-    toast.value.error('保存失败：' + (err.response?.data?.message || err.message))
+    toast.error('保存失败：' + (err.response?.data?.message || err.message))
   } finally {
     saving.value = false
   }
@@ -206,7 +203,7 @@ async function handleUploadMd(e) {
     vditor.setValue(res.data.content)
     form.value.content = res.data.content
   } catch (err) {
-    toast.value.error('上传失败')
+    toast.error('上传失败')
   }
   e.target.value = ''
 }

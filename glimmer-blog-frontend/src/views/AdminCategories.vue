@@ -61,6 +61,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory, sortCategories } from '../api/index.js'
+import { toast } from '../stores/toast.js'
 import NavBar from '../components/NavBar.vue'
 
 const categories = ref([])
@@ -140,7 +141,7 @@ async function handleCreate() {
     newName.value = ''
     loadCategories()
   } catch (err) {
-    alert(err.response?.data?.message || '创建失败')
+    toast.error(err.response?.data?.message || '创建失败')
   }
 }
 
@@ -165,7 +166,7 @@ async function handleUpdate() {
     cancelEdit()
     loadCategories()
   } catch (err) {
-    alert(err.response?.data?.message || '更新失败')
+    toast.error(err.response?.data?.message || '更新失败')
   }
 }
 
@@ -175,7 +176,7 @@ async function handleDelete(cat) {
     await deleteCategory(cat.id)
     loadCategories()
   } catch (err) {
-    alert(err.response?.data?.message || '删除失败')
+    toast.error(err.response?.data?.message || '删除失败')
   }
 }
 </script>

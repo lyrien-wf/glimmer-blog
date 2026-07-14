@@ -4,6 +4,7 @@ import com.blog.dto.ApiResponse;
 import com.blog.dto.LoginRequest;
 import com.blog.dto.LoginResponse;
 import com.blog.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.ok(userService.login(request));
     }
 }

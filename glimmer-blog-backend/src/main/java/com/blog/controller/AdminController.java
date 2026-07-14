@@ -7,6 +7,7 @@ import com.blog.service.CategoryService;
 import com.blog.service.TagService;
 import com.blog.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,14 +58,14 @@ public class AdminController {
     }
 
     @PostMapping("/articles")
-    public ApiResponse<Map<String, Long>> createArticle(@RequestBody ArticleCreateRequest request) {
+    public ApiResponse<Map<String, Long>> createArticle(@Valid @RequestBody ArticleCreateRequest request) {
         Long id = articleService.createArticle(request);
         return ApiResponse.ok(Map.of("id", id));
     }
 
     @PutMapping("/articles/{id}")
     public ApiResponse<Void> updateArticle(@PathVariable Long id,
-                                           @RequestBody ArticleCreateRequest request) {
+                                           @Valid @RequestBody ArticleCreateRequest request) {
         articleService.updateArticle(id, request);
         return ApiResponse.ok();
     }
@@ -160,7 +161,7 @@ public class AdminController {
     // ===== 密码修改 =====
 
     @PutMapping("/user/password")
-    public ApiResponse<Void> changePassword(@RequestBody PasswordRequest request,
+    public ApiResponse<Void> changePassword(@Valid @RequestBody PasswordRequest request,
                                             HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         userService.changePassword(userId, request);

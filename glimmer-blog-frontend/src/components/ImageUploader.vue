@@ -17,6 +17,7 @@
 <script setup>
 import { ref } from 'vue'
 import { uploadImage } from '../api/index.js'
+import { toast } from '../stores/toast.js'
 
 const props = defineProps({
   modelValue: { type: String, default: '' }
@@ -40,7 +41,7 @@ async function handleUpload(e) {
     const res = await uploadImage(file)
     emit('update:modelValue', res.data.url)
   } catch (err) {
-    alert('图片上传失败')
+    toast.error('图片上传失败')
   } finally {
     loading.value = false
     e.target.value = ''

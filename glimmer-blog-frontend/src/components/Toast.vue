@@ -1,46 +1,24 @@
 <template>
   <Teleport to="body">
     <Transition name="toast">
-      <div v-if="visible" :class="['toast', `toast-${type}`]">
-        <svg v-if="type === 'success'" class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div v-if="toastState.visible" :class="['toast', `toast-${toastState.type}`]">
+        <svg v-if="toastState.type === 'success'" class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 6L9 17l-5-5"/>
         </svg>
-        <svg v-else-if="type === 'error'" class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg v-else-if="toastState.type === 'error'" class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
         </svg>
         <svg v-else class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
         </svg>
-        <span class="toast-message">{{ message }}</span>
+        <span class="toast-message">{{ toastState.message }}</span>
       </div>
     </Transition>
   </Teleport>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const visible = ref(false)
-const message = ref('')
-const type = ref('success')
-let timer = null
-
-function show(msg, toastType = 'success', duration = 2500) {
-  clearTimeout(timer)
-  message.value = msg
-  type.value = toastType
-  visible.value = true
-
-  timer = setTimeout(() => {
-    visible.value = false
-  }, duration)
-}
-
-function success(msg, duration) { show(msg, 'success', duration) }
-function error(msg, duration) { show(msg, 'error', duration) }
-function info(msg, duration) { show(msg, 'info', duration) }
-
-defineExpose({ show, success, error, info })
+import { toastState } from '../stores/toast.js'
 </script>
 
 <style scoped>

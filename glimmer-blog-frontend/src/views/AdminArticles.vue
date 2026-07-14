@@ -2,8 +2,6 @@
   <div class="admin-page">
     <NavBar />
 
-    <Toast ref="toast" />
-
     <div class="container" style="padding-top: 80px;">
       <div class="admin-header">
         <h1>文章管理</h1>
@@ -67,13 +65,12 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdminArticles, deleteArticle } from '../api/index.js'
 import { useAuth } from '../stores/auth.js'
+import { toast } from '../stores/toast.js'
 import NavBar from '../components/NavBar.vue'
 import Pagination from '../components/Pagination.vue'
-import Toast from '../components/Toast.vue'
 
 const router = useRouter()
 const { logout } = useAuth()
-const toast = ref(null)
 const articles = ref([])
 const page = ref(1)
 const totalPages = ref(1)
@@ -100,10 +97,10 @@ async function handleDelete(article) {
   if (!confirm(`确定删除「${article.title}」？`)) return
   try {
     await deleteArticle(article.id)
-    toast.value.success('删除成功')
+    toast.success('删除成功')
     loadArticles(page.value)
   } catch (err) {
-    toast.value.error('删除失败')
+    toast.error('删除失败')
   }
 }
 
