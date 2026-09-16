@@ -15,8 +15,11 @@ CREATE TABLE IF NOT EXISTS `user` (
 );
 
 -- 默认管理员（密码：admin123，部署后务必修改）
+-- 注意：此哈希必须与运行时 BCryptPasswordEncoder.encode("admin123") 校验通过。
+-- PasswordInitializer 只在 admin 不存在时创建账号，不会修复已存在账号的密码，
+-- 因此若这里的哈希与 admin123 不符，全新部署将无法登录且无法自助恢复。
 INSERT INTO `user` (username, password)
-VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXEF0EJwOoNzKTSt9bVT.GEBFly')
+VALUES ('admin', '$2a$10$nHISdd5JxhgDTm3uWbXYV.ENX3ccEhzKRLh.g1qK5.yG1BaQot/ju')
 ON DUPLICATE KEY UPDATE `username` = `username`;
 
 -- 分类表

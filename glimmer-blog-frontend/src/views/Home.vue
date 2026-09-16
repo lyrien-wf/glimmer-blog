@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getArticles, searchArticles, getCategories } from '../api/index.js'
 import NavBar from '../components/NavBar.vue'
@@ -87,6 +87,7 @@ const totalPages = ref(1)
 const searchQuery = ref('')
 const loading = ref(true)
 const currentCategoryId = ref(null)
+const currentTagId = ref(null)
 let searchTimer = null
 let clockTimer = null
 
@@ -120,10 +121,9 @@ onMounted(async () => {
     console.error('加载分类失败', err)
   }
 
-  // 如果 URL 带有 categoryId 参数，同步选中状态
-  if (route.query.categoryId) {
-    currentCategoryId.value = Number(route.query.categoryId)
-  }
+  // 同步 URL 上的筛选参数（categoryId / tagId），并记录初始查询签名
+  applyQuery()
+  appliedQueryKey = queryKey()
 
   // 加载文章
   loadArticles(1)
@@ -133,18 +133,47 @@ onUnmounted(() => {
   clearInterval(clockTimer)
 })
 
+// 已应用到视图的 URL 查询签名，用于避免重复请求
+let appliedQueryKey = null
+
+function queryKey() {
+  return JSON.stringify({
+    c: route.query.categoryId ? Number(route.query.categoryId) : null,
+    t: route.query.tagId ? Number(route.query.tagId) : null
+  })
+}
+
+// 把 URL 查询参数同步到筛选状态
+function applyQuery() {
+  currentCategoryId.value = route.query.categoryId ? Number(route.query.categoryId) : null
+  currentTagId.value = route.query.tagId ? Number(route.query.tagId) : null
+}
+
+// URL 查询变化时重新请求：覆盖页内跳转、浏览器前进/后退，
+// 以及从文章页点击标签跳回首页（/?tagId=x）的场景
+watch(() => route.query, () => {
+  const key = queryKey()
+  if (key === appliedQueryKey) return
+  applyQuery()
+  appliedQueryKey = key
+  searchQuery.value = ''
+  page.value = 1
+  loadArticles(1)
+})
+
 function selectCategory(catId) {
   currentCategoryId.value = catId
+  currentTagId.value = null
   searchQuery.value = ''
   page.value = 1
 
-  // 更新 URL
+  // 更新 URL；这里先行加载并记录查询签名，避免 watch 再触发一次重复请求
   if (catId) {
     router.push({ query: { categoryId: catId } })
   } else {
     router.push('/')
   }
-
+  appliedQueryKey = JSON.stringify({ c: catId ?? null, t: null })
   loadArticles(1)
 }
 
@@ -153,6 +182,8 @@ async function loadArticles(p) {
   try {
     const params = { page: p, size: 9 }
     if (currentCategoryId.value) params.categoryId = currentCategoryId.value
+    // 标签筛选：对应 /?tagId=<id>，后端 GET /api/articles 支持 tagId
+    if (currentTagId.value) params.tagId = currentTagId.value
     const res = await getArticles(params)
     articles.value = res.data.list
     totalPages.value = res.data.pages
