@@ -315,6 +315,16 @@ img {
 .md-content h2 { font-size: 1.5em; margin: 1.4em 0 0.5em; font-weight: 600; letter-spacing: -0.01em; border-bottom: 1px solid var(--color-border-light); padding-bottom: 0.3em; }
 .md-content h3 { font-size: 1.25em; margin: 1.2em 0 0.4em; font-weight: 600; }
 
+/* 锚点定位补偿：导航栏为 fixed 56px，若不补偿，scrollIntoView 会把标题顶到 0，
+   标题被导航栏完全盖住，看起来就像"跳到了标题的下一行"。
+   取值与 TocNav 的 sticky top(80px) 对齐，给导航栏下方留出 24px 呼吸间距。 */
+.md-content h1,
+.md-content h2,
+.md-content h3,
+.md-content h4 {
+  scroll-margin-top: 80px;
+}
+
 .md-content p {
   margin: 0.8em 0;
 }
