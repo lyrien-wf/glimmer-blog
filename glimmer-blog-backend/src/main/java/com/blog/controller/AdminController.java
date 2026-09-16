@@ -8,6 +8,8 @@ import com.blog.service.TagService;
 import com.blog.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +25,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     private final ArticleService articleService;
     private final CategoryService categoryService;
@@ -94,6 +98,7 @@ public class AdminController {
 
     @PostMapping("/upload/image")
     public ApiResponse<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
+        File dest = null;
         try {
             String originalFilename = file.getOriginalFilename();
             String ext = originalFilename != null && originalFilename.contains(".")
@@ -109,12 +114,13 @@ public class AdminController {
                 Files.createDirectories(uploadPath);
             }
 
-            File dest = uploadPath.resolve(newFilename).toFile();
+            dest = uploadPath.resolve(newFilename).toFile();
             file.transferTo(dest);
 
             return ApiResponse.ok(Map.of("url", "/uploads/" + newFilename));
         } catch (IOException e) {
-            throw new RuntimeException("图片上传失败");
+            log.error("图片上传失败，目标路径：{}", dest, e);
+            throw new RuntimeException("图片上传失败", e);
         }
     }
 
@@ -147,9 +153,10 @@ public class AdminController {
     // ===== 标签管理 =====
 
     @PostMapping("/tags")
-    public ApiResponse<Void> createTag(@RequestBody Map<String, String> body) {
-        tagService.createTag(body.get("name"));
-        return ApiResponse.ok();
+    public ApiResponse<TagDTO> createTag(@RequestBody Map<String, String> body) {
+        // 必须把新建标签（含真实 id）回给前端：前端要用真实 id 提交 tagIds，
+        // 否则只能拿时间戳兜底，写出指向不存在标签的 article_tag 行。
+        return ApiResponse.ok(tagService.createTag(body.get("name")));
     }
 
     @DeleteMapping("/tags/{id}")

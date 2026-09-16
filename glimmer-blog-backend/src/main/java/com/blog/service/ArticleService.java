@@ -115,6 +115,8 @@ public class ArticleService {
 
     @Transactional
     public Long createArticle(ArticleCreateRequest req) {
+        validateTagIds(req.getTagIds());
+
         Article article = new Article();
         article.setTitle(req.getTitle());
         article.setContent(req.getContent());
@@ -139,6 +141,8 @@ public class ArticleService {
     public void updateArticle(Long id, ArticleCreateRequest req) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
+        validateTagIds(req.getTagIds());
+
 
         article.setTitle(req.getTitle());
         article.setContent(req.getContent());
@@ -178,9 +182,39 @@ public class ArticleService {
 
     // ===== 辅助方法 =====
 
+    /**
+     * 校验标签 id 是否真实存在。必须在任何写库动作之前调用：
+     * 否则会写入指向不存在标签的 article_tag 行（孤儿数据），
+     * 读取时又被静默过滤掉，表现为「标签保存了但实际没生效」。
+     */
+    private void validateTagIds(List<Long> tagIds) {
+        if (tagIds == null || tagIds.isEmpty()) return;
+
+        List<Long> distinct = tagIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (distinct.isEmpty()) return;
+
+        Set<Long> existing = tagRepository.findAllById(distinct).stream()
+                .map(Tag::getId)
+                .collect(Collectors.toSet());
+        List<Long> missing = distinct.stream()
+                .filter(id -> !existing.contains(id))
+                .collect(Collectors.toList());
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException("标签不存在：" + missing);
+        }
+    }
+
     private void saveArticleTags(Long articleId, List<Long> tagIds) {
         if (tagIds == null || tagIds.isEmpty()) return;
-        for (Long tagId : tagIds) {
+        // 去重并过滤空值：article_tag 是 (article_id, tag_id) 复合主键，重复 tagId 会主键冲突
+        List<Long> distinct = tagIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        for (Long tagId : distinct) {
             ArticleTag at = new ArticleTag();
             at.setArticleId(articleId);
             at.setTagId(tagId);
