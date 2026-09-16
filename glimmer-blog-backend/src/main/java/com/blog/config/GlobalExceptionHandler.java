@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
@@ -32,6 +33,16 @@ public class GlobalExceptionHandler {
             return ApiResponse.error(400, "操作失败，请稍后重试");
         }
         return ApiResponse.error(400, message);
+    }
+
+    /**
+     * 上传体积超限。必须单独处理：否则会落到下面的 RuntimeException 兜底分支，
+     * 把框架原文（Maximum upload size exceeded）直接透给前端。
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<Void> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return ApiResponse.error(400, "文件过大，超出服务器允许的上传大小限制");
     }
 
     @ExceptionHandler(Exception.class)
