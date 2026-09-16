@@ -1,0 +1,17 @@
+# Normalize line endings: store LF, checkout LF (silences CRLF warnings on Windows)
+* text=auto eol=lf
+
+# Binary files: never convert
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.jar   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.pdf   binary
+*.zip   binary
