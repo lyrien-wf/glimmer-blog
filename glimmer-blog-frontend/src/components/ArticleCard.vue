@@ -47,31 +47,12 @@ function formatDate(dateStr) {
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  position: relative;
 }
 
-/* 悬浮发光边框 */
-.article-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-md);
-  padding: 1px;
-  background: var(--gradient-brand);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity var(--transition);
-  pointer-events: none;
-}
-
-.article-card:hover::after {
-  opacity: 1;
-}
-
+/* 悬浮浮起：两层中性阴影（近距接触阴影 + 远距柔和阴影）比单层更有真实的抬升感，
+   过渡由 main.css 中 .card 的 transition 负责 */
 .article-card:hover {
-  box-shadow: 0 12px 36px rgba(107, 78, 255, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .card-cover {

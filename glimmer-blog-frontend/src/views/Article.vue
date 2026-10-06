@@ -81,7 +81,8 @@ const error = ref('')
 
 const coverStyle = computed(() => {
   if (article.value?.coverUrl) return {}
-  return { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+  // 无封面时用中性深色打底，避免蓝紫渐变式的配色
+  return { background: 'var(--color-bg-dark)' }
 })
 
 onMounted(async () => {

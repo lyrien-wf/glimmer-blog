@@ -14,9 +14,7 @@
   --color-border-light: #e8e8ed;
   --color-danger: #ff3b30;
 
-  /* 渐变色 */
-  --gradient-brand: linear-gradient(135deg, #0071e3 0%, #6b4eff 60%, #a24bff 100%);
-  --color-accent-glow: rgba(0, 113, 227, 0.28);
+  /* 全站已移除蓝紫渐变与光晕：强调色统一使用 --color-accent */
 
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   --font-mono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
@@ -100,17 +98,13 @@ img {
 }
 
 .btn-primary {
-  background: var(--gradient-brand);
+  background: var(--color-accent);
   color: #fff;
-  background-size: 140% 140%;
-  background-position: 0% 50%;
-  transition: background-position var(--transition), transform var(--transition), box-shadow var(--transition);
+  transition: background-color var(--transition);
 }
 
 .btn-primary:hover {
-  background-position: 100% 50%;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px var(--color-accent-glow);
+  background: var(--color-accent-hover);
 }
 
 .btn-secondary {
@@ -190,16 +184,6 @@ img {
 .card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
-}
-
-/* ===== 渐变文字工具类 ===== */
-
-.gradient-text {
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
 }
 
 /* ===== 导航栏 ===== */

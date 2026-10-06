@@ -254,13 +254,9 @@ async function doSearch(q, p) {
 .clock-time {
   font-size: 64px;
   font-weight: 200;
-  letter-spacing: 4px;
+  letter-spacing: 2px;
   font-variant-numeric: tabular-nums;
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: var(--color-text);
   line-height: 1.1;
 }
 
@@ -305,10 +301,9 @@ async function doSearch(q, p) {
 }
 
 .category-tab.active {
-  background: var(--gradient-brand);
-  border-color: transparent;
+  background: var(--color-text);
+  border-color: var(--color-text);
   color: #fff;
-  box-shadow: 0 4px 14px var(--color-accent-glow);
 }
 
 .search-section {
