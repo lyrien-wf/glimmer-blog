@@ -90,6 +90,8 @@ const currentCategoryId = ref(null)
 const currentTagId = ref(null)
 let searchTimer = null
 let clockTimer = null
+// 请求序号：只接受最后一次发起的请求结果，避免慢响应覆盖新结果
+let requestSeq = 0
 
 const clockTime = ref('')
 const clockDate = ref('')
@@ -178,6 +180,7 @@ function selectCategory(catId) {
 }
 
 async function loadArticles(p) {
+  const seq = ++requestSeq
   loading.value = true
   try {
     const params = { page: p, size: 9 }
@@ -185,13 +188,14 @@ async function loadArticles(p) {
     // 标签筛选：对应 /?tagId=<id>，后端 GET /api/articles 支持 tagId
     if (currentTagId.value) params.tagId = currentTagId.value
     const res = await getArticles(params)
+    if (seq !== requestSeq) return   // 已有更新的请求发出，丢弃这次结果
     articles.value = res.data.list
     totalPages.value = res.data.pages
     page.value = p
   } catch (err) {
-    console.error('加载文章失败', err)
+    if (seq === requestSeq) console.error('加载文章失败', err)
   } finally {
-    loading.value = false
+    if (seq === requestSeq) loading.value = false
   }
 }
 
@@ -216,13 +220,15 @@ function onSearch() {
 }
 
 async function doSearch(q, p) {
+  const seq = ++requestSeq
   try {
     const res = await searchArticles(q, p)
+    if (seq !== requestSeq) return   // 已有更新的请求发出，丢弃这次结果
     articles.value = res.data.list
     totalPages.value = res.data.pages
     page.value = p
   } catch (err) {
-    console.error('搜索失败', err)
+    if (seq === requestSeq) console.error('搜索失败', err)
   }
 }
 </script>

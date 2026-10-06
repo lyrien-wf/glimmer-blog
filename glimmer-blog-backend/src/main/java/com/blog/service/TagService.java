@@ -1,6 +1,7 @@
 package com.blog.service;
 
 import com.blog.dto.TagDTO;
+import com.blog.exception.BusinessException;
 import com.blog.model.Tag;
 import com.blog.repository.ArticleTagRepository;
 import com.blog.repository.TagRepository;
@@ -29,6 +30,10 @@ public class TagService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 幂等创建：已存在则直接返回既有标签（含真实 id），
+     * 供前端"输入即建标签"的交互使用。
+     */
     public TagDTO createTag(String name) {
         Tag tag = tagRepository.findByName(name).orElseGet(() -> {
             Tag newTag = new Tag();
@@ -41,7 +46,7 @@ public class TagService {
     @Transactional
     public void deleteTag(Long id) {
         Tag tag = tagRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("标签不存在"));
+                .orElseThrow(() -> BusinessException.notFound("标签不存在"));
         articleTagRepository.deleteByTagId(id);
         tagRepository.delete(tag);
     }

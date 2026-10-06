@@ -1,13 +1,15 @@
 package com.blog.service;
 
 import com.blog.dto.CategoryDTO;
-import com.blog.model.Article;
+import com.blog.exception.BusinessException;
 import com.blog.model.Category;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,14 +27,14 @@ public class CategoryService {
 
     public List<CategoryDTO> getAllCategories() {
         return categoryRepository.findAll().stream()
-                .sorted(java.util.Comparator.comparing(cat -> cat.getSortOrder() != null ? cat.getSortOrder() : 0))
+                .sorted(Comparator.comparing(cat -> cat.getSortOrder() != null ? cat.getSortOrder() : 0))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
     public CategoryDTO createCategory(String name) {
         if (categoryRepository.findByName(name).isPresent()) {
-            throw new RuntimeException("分类已存在");
+            throw BusinessException.conflict("分类已存在");
         }
         Category category = new Category();
         category.setName(name);
@@ -41,28 +43,31 @@ public class CategoryService {
 
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("分类不存在"));
+                .orElseThrow(() -> BusinessException.notFound("分类不存在"));
         long count = articleRepository.countByCategoryId(id);
         if (count > 0) {
-            throw new RuntimeException("该分类下还有 " + count + " 篇文章，无法删除");
+            throw BusinessException.conflict("该分类下还有 " + count + " 篇文章，无法删除");
         }
         categoryRepository.delete(category);
     }
 
     public void updateCategory(Long id, String name) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("分类不存在"));
+                .orElseThrow(() -> BusinessException.notFound("分类不存在"));
         categoryRepository.findByName(name).ifPresent(existing -> {
             if (!existing.getId().equals(id)) {
-                throw new RuntimeException("分类名已存在");
+                throw BusinessException.conflict("分类名已存在");
             }
         });
         category.setName(name);
         categoryRepository.save(category);
     }
 
-    @org.springframework.transaction.annotation.Transactional
-    public void updateSortOrder(java.util.List<Long> sortedIds) {
+    @Transactional
+    public void updateSortOrder(List<Long> sortedIds) {
+        if (sortedIds == null || sortedIds.isEmpty()) {
+            return;
+        }
         for (int i = 0; i < sortedIds.size(); i++) {
             final int order = i;
             categoryRepository.findById(sortedIds.get(i)).ifPresent(cat -> {

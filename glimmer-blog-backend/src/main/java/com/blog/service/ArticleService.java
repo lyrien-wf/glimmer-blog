@@ -2,6 +2,7 @@ package com.blog.service;
 
 import com.blog.config.MarkdownUtil;
 import com.blog.dto.*;
+import com.blog.exception.BusinessException;
 import com.blog.model.Article;
 import com.blog.model.ArticleTag;
 import com.blog.model.Category;
@@ -23,6 +24,10 @@ import java.util.stream.Collectors;
 
 @Service
 public class ArticleService {
+
+    /** 单页最大条数：避免 size=100000 这类请求一次性把整表 LONGTEXT 拉出来 */
+    private static final int MAX_PAGE_SIZE = 50;
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ArticleRepository articleRepository;
     private final ArticleTagRepository articleTagRepository;
@@ -67,7 +72,7 @@ public class ArticleService {
     // ===== 公开接口 =====
 
     public PageResponse<ArticleListResponse> getPublishedArticles(Integer page, Integer size, Long categoryId, Long tagId) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = toPageable(page, size);
         Page<Article> articlePage;
 
         if (categoryId != null) {
@@ -83,9 +88,9 @@ public class ArticleService {
 
     public ArticleDetailResponse getArticleDetail(Long id) {
         Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
+                .orElseThrow(() -> BusinessException.notFound("文章不存在"));
         if (!Boolean.TRUE.equals(article.getIsPublished())) {
-            throw new RuntimeException("文章不存在");
+            throw BusinessException.notFound("文章不存在");
         }
         // 使用内存计数器，避免每次访问都写库
         viewCounters.merge(id, 1L, Long::sum);
@@ -94,27 +99,28 @@ public class ArticleService {
     }
 
     public PageResponse<ArticleListResponse> searchArticles(String q, Integer page, Integer size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Article> articlePage = articleRepository.searchPublished(q, pageable);
+        Pageable pageable = toPageable(page, size);
+        Page<Article> articlePage = articleRepository.searchPublished(toLikePattern(q), pageable);
         return toPageResponse(articlePage);
     }
 
     // ===== 管理接口 =====
 
     public PageResponse<ArticleListResponse> getAdminArticles(Integer page, Integer size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = toPageable(page, size);
         Page<Article> articlePage = articleRepository.findAllOrderByCreatedAtDesc(pageable);
         return toPageResponse(articlePage);
     }
 
     public ArticleDetailResponse getAdminArticleDetail(Long id) {
         Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
+                .orElseThrow(() -> BusinessException.notFound("文章不存在"));
         return toDetailResponse(article);
     }
 
     @Transactional
     public Long createArticle(ArticleCreateRequest req) {
+        validateCategory(req.getCategoryId());
         validateTagIds(req.getTagIds());
 
         Article article = new Article();
@@ -139,10 +145,11 @@ public class ArticleService {
 
     @Transactional
     public void updateArticle(Long id, ArticleCreateRequest req) {
-        Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
-        validateTagIds(req.getTagIds());
+        validateCategory(req.getCategoryId());
 
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> BusinessException.notFound("文章不存在"));
+        validateTagIds(req.getTagIds());
 
         article.setTitle(req.getTitle());
         article.setContent(req.getContent());
@@ -165,7 +172,7 @@ public class ArticleService {
     @Transactional
     public void deleteArticle(Long id) {
         if (!articleRepository.existsById(id)) {
-            throw new RuntimeException("文章不存在");
+            throw BusinessException.notFound("文章不存在");
         }
         articleTagRepository.deleteByArticleId(id);
         articleRepository.deleteById(id);
@@ -173,14 +180,54 @@ public class ArticleService {
 
     public Map<String, String> uploadMd(String filename, String content) {
         Map<String, String> result = new HashMap<>();
+
+        // 文件名可能缺失；同时剥离 UTF-8 BOM，否则第一个标题会带上不可见字符
+        String safeName = filename == null ? "" : filename;
+        String body = content == null ? "" : content;
+        if (body.startsWith("\uFEFF")) {
+            body = body.substring(1);
+        }
+
         // 从文件名提取标题（去掉 .md 后缀）
-        String title = filename.replaceAll("\\.md$", "").replaceAll("_", " ");
+        String title = safeName.replaceAll("(?i)\\.md$", "").replaceAll("_", " ").trim();
         result.put("title", title);
-        result.put("content", content);
+        result.put("content", body);
         return result;
     }
 
     // ===== 辅助方法 =====
+
+    /**
+     * 归一化分页参数：页码至少为 1，每页条数限制在 1..MAX_PAGE_SIZE。
+     */
+    private Pageable toPageable(Integer page, Integer size) {
+        int safePage = (page == null || page < 1) ? 1 : page;
+        int safeSize = (size == null || size < 1) ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
+        return PageRequest.of(safePage - 1, safeSize);
+    }
+
+    /**
+     * 构造 LIKE 模式串。MySQL 的 LIKE 默认以反斜杠作为转义符，
+     * 这里先转义用户输入中的 \ % _ ，避免输入一个 "%" 就匹配到整表。
+     */
+    private String toLikePattern(String q) {
+        String keyword = q == null ? "" : q.trim();
+        String escaped = keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        return "%" + escaped + "%";
+    }
+
+    /**
+     * 分类必须真实存在，否则在没有外键约束的库上会写入一个悬空 id。
+     * 注意：categoryId 为 null 时仍沿用上游的「其他」默认分类（getDefaultCategoryId）。
+     */
+    private void validateCategory(Long categoryId) {
+        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+            throw BusinessException.badRequest("分类不存在");
+        }
+    }
 
     /**
      * 校验标签 id 是否真实存在。必须在任何写库动作之前调用：

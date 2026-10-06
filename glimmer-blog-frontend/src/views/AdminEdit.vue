@@ -221,12 +221,21 @@ async function addTag() {
   // 检查是否已存在
   let tag = allTags.value.find(t => t.name === name)
   if (!tag) {
+    let created = null
     try {
       const res = await createTag(name)
-      tag = { id: res.data?.id || Date.now(), name }
-    } catch {
-      tag = { id: Date.now(), name }
+      created = res?.data
+    } catch (err) {
+      toast.error(err.response?.data?.message || '标签创建失败')
+      return
     }
+    // 必须使用服务端返回的真实标签 id：用时间戳兜底会写入无效的 tag_id 关联
+    if (!created?.id) {
+      toast.error('标签创建失败，请重试')
+      return
+    }
+    tag = created
+    allTags.value.push(tag)
   }
 
   selectedTags.value.push(tag)

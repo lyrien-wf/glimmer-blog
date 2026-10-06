@@ -2,6 +2,7 @@ package com.blog.controller;
 
 import com.blog.config.BlogConfig;
 import com.blog.dto.*;
+import com.blog.exception.BusinessException;
 import com.blog.service.ArticleService;
 import com.blog.service.CategoryService;
 import com.blog.service.TagService;
@@ -87,7 +88,7 @@ public class AdminController {
             String content = new String(file.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
             return ApiResponse.ok(articleService.uploadMd(filename, content));
         } catch (IOException e) {
-            throw new RuntimeException("文件读取失败");
+            throw BusinessException.badRequest("文件读取失败，请确认是 UTF-8 编码的 .md 文件");
         }
     }
 
@@ -105,7 +106,7 @@ public class AdminController {
                     ? originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase()
                     : "";
             if (!ALLOWED_IMG_EXT.contains(ext)) {
-                throw new RuntimeException("不支持的图片格式，仅允许 jpg/png/gif/webp");
+                throw BusinessException.badRequest("不支持的图片格式，仅允许 jpg/png/gif/webp");
             }
             String newFilename = UUID.randomUUID().toString().replace("-", "") + ext;
 
@@ -120,15 +121,15 @@ public class AdminController {
             return ApiResponse.ok(Map.of("url", "/uploads/" + newFilename));
         } catch (IOException e) {
             log.error("图片上传失败，目标路径：{}", dest, e);
-            throw new RuntimeException("图片上传失败", e);
+            throw BusinessException.internal("图片上传失败，请稍后重试", e);
         }
     }
 
     // ===== 分类管理 =====
 
     @PostMapping("/categories")
-    public ApiResponse<Void> createCategory(@RequestBody Map<String, String> body) {
-        categoryService.createCategory(body.get("name"));
+    public ApiResponse<Void> createCategory(@Valid @RequestBody CategoryRequest body) {
+        categoryService.createCategory(body.getName());
         return ApiResponse.ok();
     }
 
@@ -139,8 +140,8 @@ public class AdminController {
     }
 
     @PutMapping("/categories/{id}")
-    public ApiResponse<Void> updateCategory(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        categoryService.updateCategory(id, body.get("name"));
+    public ApiResponse<Void> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryRequest body) {
+        categoryService.updateCategory(id, body.getName());
         return ApiResponse.ok();
     }
 
@@ -153,10 +154,10 @@ public class AdminController {
     // ===== 标签管理 =====
 
     @PostMapping("/tags")
-    public ApiResponse<TagDTO> createTag(@RequestBody Map<String, String> body) {
+    public ApiResponse<TagDTO> createTag(@Valid @RequestBody TagRequest body) {
         // 必须把新建标签（含真实 id）回给前端：前端要用真实 id 提交 tagIds，
         // 否则只能拿时间戳兜底，写出指向不存在标签的 article_tag 行。
-        return ApiResponse.ok(tagService.createTag(body.get("name")));
+        return ApiResponse.ok(tagService.createTag(body.getName()));
     }
 
     @DeleteMapping("/tags/{id}")

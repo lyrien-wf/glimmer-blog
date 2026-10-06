@@ -13,13 +13,20 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// 响应拦截器：401 跳转登录
+// 响应拦截器：401 清除登录态并跳转登录页
 api.interceptors.response.use(
   response => response.data,
   error => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status
+    const url = error.config?.url || ''
+    // 登录接口自身的 401 就是"用户名或密码错误"的正常反馈，必须原样交给页面展示；
+    // 否则会被强制刷新跳转，用户永远看不到那句错误提示。
+    const isLoginRequest = url.includes('/api/auth/login')
+    if (status === 401 && !isLoginRequest) {
       localStorage.removeItem('blog_token')
-      window.location.href = '/admin/login'
+      if (!window.location.pathname.startsWith('/admin/login')) {
+        window.location.href = '/admin/login'
+      }
     }
     return Promise.reject(error)
   }

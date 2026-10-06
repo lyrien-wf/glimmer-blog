@@ -18,8 +18,15 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
            nativeQuery = true)
     Page<Article> findByTagIdAndIsPublishedTrue(@Param("tagId") Long tagId, Pageable pageable);
 
-    @Query("SELECT DISTINCT a FROM Article a WHERE a.isPublished = true AND (a.title LIKE %:q% OR a.content LIKE %:q%)")
-    Page<Article> searchPublished(@Param("q") String q, Pageable pageable);
+    /**
+     * 关键词搜索。pattern 由调用方构造（已转义 % _ \ 并加通配符），
+     * 因此这里用普通参数占位而不是 Spring Data 的 %:q% 语法。
+     * 必须带 ORDER BY：否则分页顺序不稳定，翻页可能重复或漏条。
+     */
+    @Query("SELECT a FROM Article a WHERE a.isPublished = true " +
+           "AND (a.title LIKE :pattern OR a.content LIKE :pattern) " +
+           "ORDER BY a.createdAt DESC")
+    Page<Article> searchPublished(@Param("pattern") String pattern, Pageable pageable);
 
     @Query(value = "SELECT * FROM article ORDER BY created_at DESC",
            countQuery = "SELECT COUNT(*) FROM article",
