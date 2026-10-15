@@ -22,7 +22,6 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
-  --radius-xl: 24px;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 2px 20px rgba(0, 0, 0, 0.07);
@@ -70,12 +69,6 @@ img {
 
 .container {
   max-width: 860px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.container-wide {
-  max-width: 1100px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -452,23 +445,11 @@ img {
   transform: translateX(18px);
 }
 
-/* ===== 页面加载动画 ===== */
-
-.page-enter-active {
-  animation: pageIn 0.4s ease-out;
-}
-
-@keyframes pageIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* ===== 响应式 ===== */
 
 /* 小屏幕 (≤768px) - 手机竖屏 */
 @media (max-width: 768px) {
   .container { padding: 0 16px; }
-  .container-wide { padding: 0 16px; }
   .navbar-links { gap: 16px; }
   .navbar-links a { font-size: 13px; }
   .md-content { font-size: 15px; }
@@ -477,19 +458,16 @@ img {
 /* 中等屏幕 (769px-1024px) - 平板横屏 */
 @media (min-width: 769px) and (max-width: 1024px) {
   .container { max-width: 90%; }
-  .container-wide { max-width: 95%; }
 }
 
 /* 大屏幕 (≥1025px) - 桌面 */
 @media (min-width: 1025px) {
   .container { max-width: 860px; }
-  .container-wide { max-width: 1100px; }
 }
 
 /* 超大屏幕 (≥1440px) - 宽屏桌面 */
 @media (min-width: 1440px) {
   .container { max-width: 900px; }
-  .container-wide { max-width: 1200px; }
 }
 
 /* ===== 滚动条 ===== */

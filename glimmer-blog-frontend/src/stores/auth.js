@@ -14,14 +14,9 @@ export function useAuth() {
     isLoggedIn.value = false
   }
 
-  function checkAuth() {
-    isLoggedIn.value = !!localStorage.getItem('blog_token')
-  }
-
   return {
     isLoggedIn,
     login,
-    logout,
-    checkAuth
+    logout
   }
 }
